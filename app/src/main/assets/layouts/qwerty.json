@@ -1,0 +1,108 @@
+{
+  "id": "qwerty",
+  "label": "QWERTY",
+  "rows": [
+    {
+      "heightWeight": 0.8,
+      "keys": [
+        { "label": "Esc", "type": "KEYCODE", "keyCode": 111, "hint": "~", "widthWeight": 1.2 },
+        { "label": "F1", "type": "KEYCODE", "keyCode": 131 },
+        { "label": "F2", "type": "KEYCODE", "keyCode": 132 },
+        { "label": "F3", "type": "KEYCODE", "keyCode": 133 },
+        { "label": "F4", "type": "KEYCODE", "keyCode": 134 },
+        { "label": "F5", "type": "KEYCODE", "keyCode": 135 },
+        { "label": "F6", "type": "KEYCODE", "keyCode": 136 },
+        { "label": "F7", "type": "KEYCODE", "keyCode": 137 },
+        { "label": "F8", "type": "KEYCODE", "keyCode": 138 },
+        { "label": "F9", "type": "KEYCODE", "keyCode": 139 },
+        { "label": "F10", "type": "KEYCODE", "keyCode": 140 },
+        { "label": "F11", "type": "KEYCODE", "keyCode": 141 },
+        { "label": "F12", "type": "KEYCODE", "keyCode": 142 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "`", "shiftLabel": "~", "keyCode": 68 },
+        { "label": "1", "shiftLabel": "!", "keyCode": 8 },
+        { "label": "2", "shiftLabel": "@", "keyCode": 9 },
+        { "label": "3", "shiftLabel": "#", "keyCode": 10 },
+        { "label": "4", "shiftLabel": "$", "keyCode": 11 },
+        { "label": "5", "shiftLabel": "%", "keyCode": 12 },
+        { "label": "6", "shiftLabel": "^", "keyCode": 13 },
+        { "label": "7", "shiftLabel": "&", "keyCode": 14 },
+        { "label": "8", "shiftLabel": "*", "keyCode": 15 },
+        { "label": "9", "shiftLabel": "(", "keyCode": 16 },
+        { "label": "0", "shiftLabel": ")", "keyCode": 7 },
+        { "label": "-", "shiftLabel": "_", "keyCode": 69 },
+        { "label": "=", "shiftLabel": "+", "keyCode": 70 },
+        { "label": "Bksp", "type": "KEYCODE", "keyCode": 67, "repeatable": true, "widthWeight": 1.6 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "Tab", "type": "KEYCODE", "keyCode": 61, "widthWeight": 1.6 },
+        { "label": "Q", "keyCode": 45 },
+        { "label": "W", "keyCode": 51 },
+        { "label": "E", "keyCode": 33 },
+        { "label": "R", "keyCode": 46 },
+        { "label": "T", "keyCode": 48 },
+        { "label": "Y", "keyCode": 53 },
+        { "label": "U", "keyCode": 49 },
+        { "label": "I", "keyCode": 37 },
+        { "label": "O", "keyCode": 43 },
+        { "label": "P", "keyCode": 44 },
+        { "label": "[", "shiftLabel": "{", "keyCode": 71 },
+        { "label": "]", "shiftLabel": "}", "keyCode": 72 },
+        { "label": "\\", "shiftLabel": "|", "keyCode": 73, "widthWeight": 1.0 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "Caps", "type": "CAPS_LOCK", "widthWeight": 1.8 },
+        { "label": "A", "keyCode": 29 },
+        { "label": "S", "keyCode": 47 },
+        { "label": "D", "keyCode": 32 },
+        { "label": "F", "keyCode": 34 },
+        { "label": "G", "keyCode": 35 },
+        { "label": "H", "keyCode": 36 },
+        { "label": "J", "keyCode": 38 },
+        { "label": "K", "keyCode": 39 },
+        { "label": "L", "keyCode": 40 },
+        { "label": ";", "shiftLabel": ":", "keyCode": 74 },
+        { "label": "'", "shiftLabel": "\"", "keyCode": 75 },
+        { "label": "Enter", "type": "KEYCODE", "keyCode": 66, "widthWeight": 1.8 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "Shift", "type": "MODIFIER", "modifier": "SHIFT", "widthWeight": 2.2 },
+        { "label": "Z", "keyCode": 54 },
+        { "label": "X", "keyCode": 52 },
+        { "label": "C", "keyCode": 31 },
+        { "label": "V", "keyCode": 50 },
+        { "label": "B", "keyCode": 30 },
+        { "label": "N", "keyCode": 42 },
+        { "label": "M", "keyCode": 41 },
+        { "label": ",", "shiftLabel": "<", "keyCode": 55 },
+        { "label": ".", "shiftLabel": ">", "keyCode": 56 },
+        { "label": "/", "shiftLabel": "?", "keyCode": 76 },
+        { "label": "Up", "type": "KEYCODE", "keyCode": 19, "repeatable": true },
+        { "label": "Shift", "type": "MODIFIER", "modifier": "SHIFT", "widthWeight": 1.2 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1.4 },
+        { "label": "Win", "type": "MODIFIER", "modifier": "META" },
+        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT" },
+        { "label": "?123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1.3 },
+        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 4.0 },
+        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT" },
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL" },
+        { "label": "Left", "type": "KEYCODE", "keyCode": 21, "repeatable": true },
+        { "label": "Down", "type": "KEYCODE", "keyCode": 20, "repeatable": true },
+        { "label": "Right", "type": "KEYCODE", "keyCode": 22, "repeatable": true }
+      ]
+    }
+  ]
+}
