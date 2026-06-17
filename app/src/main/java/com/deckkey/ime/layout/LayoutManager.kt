@@ -9,7 +9,7 @@ import com.deckkey.core.model.Row
 import org.json.JSONObject
 
 /**
- * Loads keyboard layouts from `assets/layouts/*.json` and caches them.
+ * Loads keyboard layouts from JSON files under `assets/layouts/` and caches them.
  *
  * Layouts are data, not code, so new pages can be added without touching Kotlin.
  * Parsing is forgiving: unknown fields are ignored, missing fields fall back to defaults.
