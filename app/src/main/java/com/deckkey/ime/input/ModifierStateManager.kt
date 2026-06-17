@@ -52,26 +52,29 @@ class ModifierStateManager(
         states[m] = ModState.HELD
         // Remember what it was so release can decide tap vs hold transition.
         pressOriginState[m] = prev ?: ModState.OFF
-        pressDownAt[m] = now
+        consumedSinceDown[m] = false
         onChanged()
     }
 
     /** Finger lifted off a modifier key — decide latch / lock / clear. */
     fun onModifierUp(m: Modifier, now: Long) {
         val origin = pressOriginState[m] ?: ModState.OFF
-        val downAt = pressDownAt[m] ?: now
-        val wasHeldLongEnoughToChord = (now - downAt) >= holdAsChordMs
         val consumedWhileHeld = consumedSinceDown[m] == true
         consumedSinceDown[m] = false
 
-        if (wasHeldLongEnoughToChord || consumedWhileHeld) {
-            // It was used as a real hold-chord (e.g. Ctrl+C). Return to OFF.
+        if (consumedWhileHeld) {
+            // A key was pressed WHILE this modifier was held down (true chord,
+            // e.g. hold Ctrl + tap C). The chord already fired, so release to OFF.
+            // Note: we intentionally do NOT use a press-duration threshold — a slow
+            // tap with no key in between must still latch, which was the bug that
+            // made Ctrl/Shift/Alt/Win feel "not working".
             states[m] = ModState.OFF
             onChanged()
             return
         }
 
-        // Treat as a tap. Cycle: OFF -> LATCHED -> (double tap) LOCKED -> OFF
+        // No key was pressed during the hold -> treat as a tap.
+        // Cycle: OFF -> LATCHED -> (double tap) LOCKED -> OFF.
         val lastTap = lastTapAt[m] ?: 0L
         val isDoubleTap = (now - lastTap) <= doubleTapWindowMs
         lastTapAt[m] = now
@@ -118,7 +121,5 @@ class ModifierStateManager(
 
     // ---- internal bookkeeping ----
     private val pressOriginState = HashMap<Modifier, ModState>()
-    private val pressDownAt = HashMap<Modifier, Long>()
     private val consumedSinceDown = HashMap<Modifier, Boolean>()
-    private val holdAsChordMs = 220L
 }

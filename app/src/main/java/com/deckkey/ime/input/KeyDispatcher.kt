@@ -27,6 +27,7 @@ class KeyDispatcher(
     private val modifiers: ModifierStateManager,
     private val onLayoutSwitch: (String) -> Unit,
     private val onImeSwitch: () -> Unit,
+    private val onMic: () -> Unit = {},
 ) {
     private val charMap = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD)
 
@@ -37,6 +38,7 @@ class KeyDispatcher(
             KeyType.CAPS_LOCK -> modifiers.toggleCapsLock()
             KeyType.LAYOUT_SWITCH -> key.switchTo?.let(onLayoutSwitch)
             KeyType.IME_SWITCH -> onImeSwitch()
+            KeyType.MIC -> onMic()
             KeyType.KEYCODE -> {
                 if (ic != null) sendKeyCode(ic, key.keyCode)
                 modifiers.consumeAfterKey()

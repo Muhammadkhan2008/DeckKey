@@ -53,6 +53,8 @@ class KeyboardView @JvmOverloads constructor(
 
     var previewEnabled: Boolean = true
 
+    private var micActive: Boolean = false
+
     private var layout: KeyboardLayout? = null
     private val positioned = ArrayList<PositionedKey>()
 
@@ -61,6 +63,13 @@ class KeyboardView @JvmOverloads constructor(
 
     private val gap = dp(3f)
     private val cornerRadius = dp(7f)
+
+    /**
+     * Movement tolerance. A finger may drift this far outside a key before the
+     * press is cancelled — without it, natural finger jitter during a tap kills
+     * the keypress, which is the main cause of "irresponsive" keys.
+     */
+    private val touchSlop = dp(22f)
 
     // ---- paints ----
     private val keyFill = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -92,6 +101,14 @@ class KeyboardView @JvmOverloads constructor(
 
     /** Force a redraw when modifier state changes externally. */
     fun refreshModifierVisuals() = invalidate()
+
+    /** Highlight the mic key while speech recognition is active. */
+    fun setMicActive(active: Boolean) {
+        if (micActive != active) {
+            micActive = active
+            invalidate()
+        }
+    }
 
     // ---- measurement & positioning -----------------------------------------
 
@@ -150,6 +167,7 @@ class KeyboardView @JvmOverloads constructor(
             key.type == KeyType.MODIFIER && key.modifier != null ->
                 mods?.isActive(key.modifier) == true
             key.type == KeyType.CAPS_LOCK -> mods?.capsLock == true
+            key.type == KeyType.MIC -> micActive
             else -> false
         }
 
@@ -243,12 +261,30 @@ class KeyboardView @JvmOverloads constructor(
 
     private fun handleMove(pointerId: Int, x: Float, y: Float) {
         val current = activePointers[pointerId] ?: return
-        if (current.bounds.contains(x, y)) return
-        // Finger slid off the key: cancel it (and stop any repeat). No commit.
+        val b = current.bounds
+        // Still within the key (plus slop tolerance)? Keep the press alive — this
+        // stops natural finger jitter from cancelling a tap.
+        if (x >= b.left - touchSlop && x <= b.right + touchSlop &&
+            y >= b.top - touchSlop && y <= b.bottom + touchSlop
+        ) return
+
+        // Finger moved well away. If it landed on another key, re-target to it
+        // (slide-to-type feel); otherwise cancel this pointer.
+        val moved = hitTest(x, y)
         val key = current.key
-        if (key.type != KeyType.MODIFIER && key.repeatable) listener?.onRepeatStop()
+        if (key.repeatable && key.type != KeyType.MODIFIER) listener?.onRepeatStop()
         if (shouldPreview(key)) preview.dismiss()
-        activePointers.remove(pointerId)
+
+        if (moved != null && moved !== current) {
+            activePointers[pointerId] = moved
+            val mk = moved.key
+            if (mk.type != KeyType.MODIFIER) {
+                listener?.onKeyDown(mk)
+                if (previewEnabled && shouldPreview(mk)) preview.show(this, moved)
+            }
+        } else {
+            activePointers.remove(pointerId)
+        }
         invalidate()
     }
 

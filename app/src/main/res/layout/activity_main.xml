@@ -57,6 +57,21 @@
             android:layout_marginTop="6dp"
             android:text="@string/btn_select" />
 
+        <TextView
+            android:id="@+id/statusMic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:textColor="@color/key_text"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/btnMic"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/btn_mic" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"

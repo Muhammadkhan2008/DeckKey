@@ -9,10 +9,13 @@
     <string name="step2_select">2. Select DeckKey as the active keyboard</string>
     <string name="btn_enable">Enable in Settings</string>
     <string name="btn_select">Choose Keyboard</string>
+    <string name="btn_mic">Grant Microphone (voice typing)</string>
     <string name="status_enabled">DeckKey is enabled ✓</string>
     <string name="status_disabled">DeckKey is not enabled yet</string>
     <string name="status_active">DeckKey is the active keyboard ✓</string>
     <string name="status_inactive">DeckKey is not the active keyboard</string>
+    <string name="status_mic_granted">Microphone granted — mic key works ✓</string>
+    <string name="status_mic_denied">Microphone not granted — voice typing disabled</string>
 
     <string name="settings_title">Keyboard Settings</string>
     <string name="pref_haptics">Haptic feedback</string>

@@ -86,22 +86,21 @@
         { "label": ",", "shiftLabel": "<", "keyCode": 55 },
         { "label": ".", "shiftLabel": ">", "keyCode": 56 },
         { "label": "/", "shiftLabel": "?", "keyCode": 76 },
-        { "label": "Up", "type": "KEYCODE", "keyCode": 19, "repeatable": true },
+        { "label": "↑", "type": "KEYCODE", "keyCode": 19, "repeatable": true },
         { "label": "Shift", "type": "MODIFIER", "modifier": "SHIFT", "widthWeight": 1.2 }
       ]
     },
     {
       "keys": [
-        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1.4 },
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1.3 },
         { "label": "Win", "type": "MODIFIER", "modifier": "META" },
         { "label": "Alt", "type": "MODIFIER", "modifier": "ALT" },
+        { "label": "🎤", "type": "MIC" },
         { "label": "?123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1.3 },
-        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 4.0 },
-        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT" },
-        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL" },
-        { "label": "Left", "type": "KEYCODE", "keyCode": 21, "repeatable": true },
-        { "label": "Down", "type": "KEYCODE", "keyCode": 20, "repeatable": true },
-        { "label": "Right", "type": "KEYCODE", "keyCode": 22, "repeatable": true }
+        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 5.0 },
+        { "label": "←", "type": "KEYCODE", "keyCode": 21, "repeatable": true },
+        { "label": "↓", "type": "KEYCODE", "keyCode": 20, "repeatable": true },
+        { "label": "→", "type": "KEYCODE", "keyCode": 22, "repeatable": true }
       ]
     }
   ]

@@ -21,6 +21,9 @@ enum class KeyType {
 
     /** Switches to the next system IME. */
     IME_SWITCH,
+
+    /** Starts on-device speech-to-text (mic) and inserts the recognized text. */
+    MIC,
 }
 
 /**

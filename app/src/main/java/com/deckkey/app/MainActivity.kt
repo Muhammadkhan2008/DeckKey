@@ -1,10 +1,15 @@
 package com.deckkey.app
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.deckkey.R
 import com.deckkey.core.prefs.Settings as KbSettings
@@ -27,6 +32,17 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var repo: SettingsRepository
 
+    private val micPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            refreshStatus()
+            Toast.makeText(
+                this,
+                if (granted) "Microphone enabled — tap 🎤 on the keyboard to voice type"
+                else "Microphone denied — voice typing won't work",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -38,6 +54,13 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnSelect.setOnClickListener {
             (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
+        }
+        binding.btnMic.setOnClickListener {
+            if (hasMicPermission()) {
+                Toast.makeText(this, "Microphone already granted ✓", Toast.LENGTH_SHORT).show()
+            } else {
+                micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
         }
 
         bindSettings()
@@ -55,7 +78,13 @@ class MainActivity : AppCompatActivity() {
             getString(if (enabled) R.string.status_enabled else R.string.status_disabled)
         binding.statusActive.text =
             getString(if (active) R.string.status_active else R.string.status_inactive)
+        binding.statusMic.text =
+            getString(if (hasMicPermission()) R.string.status_mic_granted else R.string.status_mic_denied)
     }
+
+    private fun hasMicPermission(): Boolean =
+        ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
 
     private fun bindSettings() {
         lifecycleScope.launch {

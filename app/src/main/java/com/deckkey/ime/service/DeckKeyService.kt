@@ -1,9 +1,12 @@
 package com.deckkey.ime.service
 
+import android.content.pm.PackageManager
 import android.inputmethodservice.InputMethodService
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.deckkey.core.model.Key
 import com.deckkey.core.model.Modifier
 import com.deckkey.core.prefs.Settings
@@ -12,6 +15,7 @@ import com.deckkey.ime.feedback.FeedbackController
 import com.deckkey.ime.input.KeyDispatcher
 import com.deckkey.ime.input.KeyRepeatController
 import com.deckkey.ime.input.ModifierStateManager
+import com.deckkey.ime.input.SpeechInputController
 import com.deckkey.ime.layout.LayoutManager
 import com.deckkey.ime.view.KeyboardView
 import kotlinx.coroutines.CoroutineScope
@@ -38,6 +42,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     private lateinit var repeat: KeyRepeatController
     private lateinit var feedback: FeedbackController
     private lateinit var settingsRepo: SettingsRepository
+    private lateinit var speech: SpeechInputController
 
     private var keyboardView: KeyboardView? = null
     private var currentLayoutId: String = "qwerty"
@@ -49,10 +54,17 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         modifiers = ModifierStateManager(onChanged = { keyboardView?.refreshModifierVisuals() })
         feedback = FeedbackController(this)
         repeat = KeyRepeatController(onRepeat = { key -> onRepeatTick(key) })
+        speech = SpeechInputController(
+            context = this,
+            icProvider = { currentInputConnection },
+            onState = { listening -> keyboardView?.setMicActive(listening) },
+            onError = { msg -> Toast.makeText(this, msg, Toast.LENGTH_SHORT).show() },
+        )
         dispatcher = KeyDispatcher(
             modifiers = modifiers,
             onLayoutSwitch = { id -> switchLayout(id) },
             onImeSwitch = { switchToNextIme() },
+            onMic = { onMicTapped() },
         )
         settingsRepo = SettingsRepository(this)
         currentLayoutId = layouts.defaultLayoutId
@@ -85,6 +97,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     override fun onFinishInput() {
         super.onFinishInput()
         repeat.stop()
+        speech.stop()
     }
 
     private fun applySettings(s: Settings) {
@@ -111,6 +124,21 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
                 it.showInputMethodPicker()
             }
         }
+    }
+
+    private fun onMicTapped() {
+        val granted = ContextCompat.checkSelfPermission(
+            this, android.Manifest.permission.RECORD_AUDIO,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            Toast.makeText(
+                this,
+                "Mic permission needed — open the DeckKey app and grant microphone access",
+                Toast.LENGTH_LONG,
+            ).show()
+            return
+        }
+        speech.toggle()
     }
 
     // ---- KeyboardView.Listener ----------------------------------------------
@@ -147,6 +175,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
 
     override fun onDestroy() {
         repeat.stop()
+        speech.stop()
         scope.cancel()
         super.onDestroy()
     }
