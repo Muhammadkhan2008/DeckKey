@@ -1,6 +1,7 @@
 package com.deckkey.ime.view
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -14,6 +15,8 @@ import com.deckkey.core.model.Key
 import com.deckkey.core.model.KeyType
 import com.deckkey.core.model.KeyboardLayout
 import com.deckkey.core.model.Modifier
+import com.deckkey.core.theme.Theme
+import com.deckkey.core.theme.Themes
 import com.deckkey.ime.input.ModState
 import com.deckkey.ime.input.ModifierStateManager
 import kotlin.math.max
@@ -84,12 +87,19 @@ class KeyboardView @JvmOverloads constructor(
         textSize = dp(10f)
     }
 
-    private val colBg = ContextCompat.getColor(context, R.color.kb_background)
-    private val colNormal = ContextCompat.getColor(context, R.color.key_normal)
-    private val colNormalDown = ContextCompat.getColor(context, R.color.key_normal_pressed)
-    private val colSpecial = ContextCompat.getColor(context, R.color.key_special)
-    private val colSpecialDown = ContextCompat.getColor(context, R.color.key_special_pressed)
-    private val colModActive = ContextCompat.getColor(context, R.color.key_modifier_active)
+    private var theme: Theme = Themes.default
+    private var colBg = theme.background
+    private var colNormal = theme.keyNormal
+    private var colNormalDown = theme.keyNormalPressed
+    private var colSpecial = theme.keySpecial
+    private var colSpecialDown = theme.keySpecialPressed
+    private var colModActive = theme.modifierActive
+
+    /** Optional gallery background drawn behind the keys. */
+    private var backgroundBitmap: Bitmap? = null
+    private var backgroundDimAlpha: Int = 115 // 0..255, over the image
+    private val bgDimPaint = Paint()
+    private val bgRect = RectF()
 
     private val preview = KeyPreviewPopup(context)
 
@@ -108,6 +118,30 @@ class KeyboardView @JvmOverloads constructor(
             micActive = active
             invalidate()
         }
+    }
+
+    /** Apply a color theme and redraw. */
+    fun applyTheme(t: Theme) {
+        theme = t
+        colBg = t.background
+        colNormal = t.keyNormal
+        colNormalDown = t.keyNormalPressed
+        colSpecial = t.keySpecial
+        colSpecialDown = t.keySpecialPressed
+        colModActive = t.modifierActive
+        keyText.color = t.text
+        hintText.color = t.textDim
+        invalidate()
+    }
+
+    /**
+     * Set (or clear) the gallery background image. Pass null to remove it.
+     * [dimPercent] (0..100) darkens the image so key labels stay legible.
+     */
+    fun setBackgroundImage(bitmap: Bitmap?, dimPercent: Int) {
+        backgroundBitmap = bitmap
+        backgroundDimAlpha = (dimPercent.coerceIn(0, 100) * 255 / 100)
+        invalidate()
     }
 
     // ---- measurement & positioning -----------------------------------------
@@ -151,6 +185,18 @@ class KeyboardView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         canvas.drawColor(colBg)
+        // Optional gallery background image, center-cropped to fill, with a dim overlay.
+        backgroundBitmap?.let { bmp ->
+            val vw = width.toFloat(); val vh = height.toFloat()
+            val scale = maxOf(vw / bmp.width, vh / bmp.height)
+            val dw = bmp.width * scale; val dh = bmp.height * scale
+            val left = (vw - dw) / 2f; val top = (vh - dh) / 2f
+            bgRect.set(left, top, left + dw, top + dh)
+            canvas.drawBitmap(bmp, null, bgRect, null)
+            // dim overlay so labels remain readable over busy photos
+            bgDimPaint.color = Color.argb(backgroundDimAlpha, 0, 0, 0)
+            canvas.drawRect(0f, 0f, vw, vh, bgDimPaint)
+        }
         val mods = modifiers
         for (pk in positioned) {
             val pressed = activePointers.values.any { it === pk }
@@ -183,7 +229,7 @@ class KeyboardView @JvmOverloads constructor(
         // primary label
         val cx = r.centerX()
         val baseline = r.centerY() - (keyText.descent() + keyText.ascent()) / 2f
-        keyText.color = if (modActive) Color.WHITE else ContextCompat.getColor(context, R.color.key_text)
+        keyText.color = if (modActive) Color.WHITE else theme.text
         val label = labelFor(key, mods)
         keyText.textSize = if (key.label.length > 2) dp(13f) else dp(17f)
         canvas.drawText(label, cx, baseline, keyText)

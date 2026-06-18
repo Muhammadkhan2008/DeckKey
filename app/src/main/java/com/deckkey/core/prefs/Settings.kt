@@ -17,6 +17,11 @@ data class Settings(
     val repeatInitialDelayMs: Int = 400,
     val repeatIntervalMs: Int = 45,
     val modifierMode: ModifierMode = ModifierMode.LATCH,
+    val themeId: String = "midnight",
+    /** content:// URI of a gallery image to draw behind the keys, or "" for none. */
+    val backgroundUri: String = "",
+    /** 0..100 dim applied over the background image so labels stay readable. */
+    val backgroundDim: Int = 45,
 ) {
     companion object {
         val DEFAULT = Settings()

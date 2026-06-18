@@ -3,7 +3,7 @@
   "label": "Symbols",
   "rows": [
     {
-      "heightWeight": 0.8,
+      "heightWeight": 1.0,
       "keys": [
         { "label": "Esc", "type": "KEYCODE", "keyCode": 111, "widthWeight": 1.2 },
         { "label": "Home", "type": "KEYCODE", "keyCode": 122 },
@@ -17,55 +17,70 @@
     },
     {
       "keys": [
-        { "label": "~", "keyCode": 68 },
-        { "label": "`", "keyCode": 68 },
-        { "label": "|", "keyCode": 73 },
-        { "label": "•", "output": "•" },
-        { "label": "√", "output": "√" },
-        { "label": "π", "output": "π" },
-        { "label": "÷", "output": "÷" },
-        { "label": "×", "output": "×" },
-        { "label": "¶", "output": "¶" },
-        { "label": "∆", "output": "∆" },
+        { "label": "1", "keyCode": 8 },
+        { "label": "2", "keyCode": 9 },
+        { "label": "3", "keyCode": 10 },
+        { "label": "4", "keyCode": 11 },
+        { "label": "5", "keyCode": 12 },
+        { "label": "6", "keyCode": 13 },
+        { "label": "7", "keyCode": 14 },
+        { "label": "8", "keyCode": 15 },
+        { "label": "9", "keyCode": 16 },
+        { "label": "0", "keyCode": 7 },
         { "label": "Bksp", "type": "KEYCODE", "keyCode": 67, "repeatable": true, "widthWeight": 1.5 }
       ]
     },
     {
       "keys": [
-        { "label": "$", "keyCode": 11 },
-        { "label": "€", "output": "€" },
-        { "label": "£", "output": "£" },
-        { "label": "¥", "output": "¥" },
-        { "label": "^", "keyCode": 13 },
-        { "label": "°", "output": "°" },
-        { "label": "=", "keyCode": 70 },
-        { "label": "{", "keyCode": 71 },
-        { "label": "}", "keyCode": 72 },
-        { "label": "\\", "keyCode": 73 }
+        { "label": "!", "output": "!" },
+        { "label": "@", "output": "@" },
+        { "label": "#", "output": "#" },
+        { "label": "$", "output": "$" },
+        { "label": "%", "output": "%" },
+        { "label": "^", "output": "^" },
+        { "label": "&", "output": "&" },
+        { "label": "*", "output": "*" },
+        { "label": "(", "output": "(" },
+        { "label": ")", "output": ")" }
       ]
     },
     {
       "keys": [
-        { "label": "%", "keyCode": 12 },
-        { "label": "©", "output": "©" },
-        { "label": "®", "output": "®" },
-        { "label": "™", "output": "™" },
-        { "label": "✓", "output": "✓" },
-        { "label": "[", "keyCode": 71 },
-        { "label": "]", "keyCode": 72 },
-        { "label": "<", "keyCode": 55 },
-        { "label": ">", "keyCode": 56 },
+        { "label": "-", "output": "-" },
+        { "label": "_", "output": "_" },
+        { "label": "=", "output": "=" },
+        { "label": "+", "output": "+" },
+        { "label": "[", "output": "[" },
+        { "label": "]", "output": "]" },
+        { "label": "{", "output": "{" },
+        { "label": "}", "output": "}" },
+        { "label": ";", "output": ";" },
         { "label": "Enter", "type": "KEYCODE", "keyCode": 66, "widthWeight": 1.5 }
       ]
     },
     {
       "keys": [
+        { "label": ":", "output": ":" },
+        { "label": "'", "output": "'" },
+        { "label": "\"", "output": "\"" },
+        { "label": "\\", "output": "\\" },
+        { "label": "|", "output": "|" },
+        { "label": "/", "output": "/" },
+        { "label": "<", "output": "<" },
+        { "label": ">", "output": ">" },
+        { "label": "?", "output": "?" },
+        { "label": "~", "output": "~" }
+      ]
+    },
+    {
+      "keys": [
         { "label": "ABC", "type": "LAYOUT_SWITCH", "switchTo": "qwerty", "widthWeight": 1.4 },
+        { "label": "=\\<", "type": "LAYOUT_SWITCH", "switchTo": "symbols2", "widthWeight": 1.3 },
         { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL" },
         { "label": "Alt", "type": "MODIFIER", "modifier": "ALT" },
-        { "label": ",", "keyCode": 55 },
-        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 3.5 },
-        { "label": ".", "keyCode": 56 },
+        { "label": ",", "output": "," },
+        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 4.0 },
+        { "label": ".", "output": "." },
         { "label": "Tab", "type": "KEYCODE", "keyCode": 61 },
         { "label": "🌐", "type": "IME_SWITCH" }
       ]

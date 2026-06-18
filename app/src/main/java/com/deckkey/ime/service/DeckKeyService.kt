@@ -11,6 +11,7 @@ import com.deckkey.core.model.Key
 import com.deckkey.core.model.Modifier
 import com.deckkey.core.prefs.Settings
 import com.deckkey.core.prefs.SettingsRepository
+import com.deckkey.core.theme.Themes
 import com.deckkey.ime.feedback.FeedbackController
 import com.deckkey.ime.input.KeyDispatcher
 import com.deckkey.ime.input.KeyRepeatController
@@ -109,6 +110,25 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         keyboardView?.apply {
             previewEnabled = s.previewPopup
             keyHeightPx = s.keyHeightDp * resources.displayMetrics.density
+            applyTheme(Themes.byId(s.themeId))
+            // Load background image if a URI is set
+            if (s.backgroundUri.isNotEmpty()) {
+                loadBackgroundBitmap(s.backgroundUri, s.backgroundDim)
+            } else {
+                setBackgroundImage(null, 0)
+            }
+        }
+    }
+
+    private fun loadBackgroundBitmap(uriString: String, dim: Int) {
+        try {
+            val uri = android.net.Uri.parse(uriString)
+            val bmp = android.graphics.BitmapFactory.decodeStream(
+                contentResolver.openInputStream(uri)
+            )
+            keyboardView?.setBackgroundImage(bmp, dim)
+        } catch (_: Exception) {
+            keyboardView?.setBackgroundImage(null, 0)
         }
     }
 

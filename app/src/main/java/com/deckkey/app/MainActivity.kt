@@ -3,6 +3,7 @@ package com.deckkey.app
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
@@ -11,26 +12,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.deckkey.R
 import com.deckkey.core.prefs.Settings as KbSettings
 import com.deckkey.core.prefs.SettingsRepository
+import com.deckkey.core.theme.Themes
 import com.deckkey.databinding.ActivityMainBinding
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/**
- * Setup wizard + settings screen.
- *
- * Three jobs:
- *  1. Walk the user through enabling DeckKey in system settings and selecting it.
- *  2. Show live enabled/active status.
- *  3. Edit [KbSettings] (haptics, popup, key height, repeat speed), persisted to DataStore;
- *     the running IME picks up changes immediately via its settings Flow.
- */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var repo: SettingsRepository
+    private lateinit var themeAdapter: ThemeAdapter
 
     private val micPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -41,6 +36,17 @@ class MainActivity : AppCompatActivity() {
                 else "Microphone denied — voice typing won't work",
                 Toast.LENGTH_SHORT,
             ).show()
+        }
+
+    private val galleryLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri ?: return@registerForActivityResult
+            // Persist read permission across reboots
+            contentResolver.takePersistableUriPermission(
+                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            save { it.copy(backgroundUri = uri.toString()) }
+            Toast.makeText(this, "Background image set", Toast.LENGTH_SHORT).show()
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,7 +68,13 @@ class MainActivity : AppCompatActivity() {
                 micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
             }
         }
+        binding.btnPickBg.setOnClickListener { galleryLauncher.launch("image/*") }
+        binding.btnClearBg.setOnClickListener {
+            save { it.copy(backgroundUri = "") }
+            Toast.makeText(this, "Background cleared", Toast.LENGTH_SHORT).show()
+        }
 
+        setupThemePicker()
         bindSettings()
     }
 
@@ -71,24 +83,33 @@ class MainActivity : AppCompatActivity() {
         refreshStatus()
     }
 
+    private fun setupThemePicker() {
+        themeAdapter = ThemeAdapter(Themes.all, Themes.default.id) { theme ->
+            save { it.copy(themeId = theme.id) }
+        }
+        binding.rvThemes.apply {
+            layoutManager = LinearLayoutManager(this@MainActivity, LinearLayoutManager.HORIZONTAL, false)
+            adapter = themeAdapter
+        }
+    }
+
     private fun refreshStatus() {
-        val enabled = isImeEnabled()
-        val active = isImeActive()
         binding.statusEnabled.text =
-            getString(if (enabled) R.string.status_enabled else R.string.status_disabled)
+            getString(if (isImeEnabled()) R.string.status_enabled else R.string.status_disabled)
         binding.statusActive.text =
-            getString(if (active) R.string.status_active else R.string.status_inactive)
+            getString(if (isImeActive()) R.string.status_active else R.string.status_inactive)
         binding.statusMic.text =
             getString(if (hasMicPermission()) R.string.status_mic_granted else R.string.status_mic_denied)
     }
 
-    private fun hasMicPermission(): Boolean =
+    private fun hasMicPermission() =
         ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) ==
             PackageManager.PERMISSION_GRANTED
 
     private fun bindSettings() {
         lifecycleScope.launch {
             val s = repo.settings.first()
+
             binding.cbHaptics.isChecked = s.haptics
             binding.cbSound.isChecked = s.sound
             binding.cbPopup.isChecked = s.previewPopup
@@ -100,6 +121,12 @@ class MainActivity : AppCompatActivity() {
             binding.seekRepeatInterval.max = KbSettings.MAX_REPEAT_INTERVAL - KbSettings.MIN_REPEAT_INTERVAL
             binding.seekRepeatInterval.progress = s.repeatIntervalMs - KbSettings.MIN_REPEAT_INTERVAL
             binding.lblRepeatInterval.text = getString(R.string.pref_repeat_interval) + ": ${s.repeatIntervalMs}"
+
+            themeAdapter.setSelected(s.themeId)
+
+            binding.seekBgDim.max = 100
+            binding.seekBgDim.progress = s.backgroundDim
+            binding.lblBgDim.text = getString(R.string.bg_dim_label, s.backgroundDim)
         }
 
         binding.cbHaptics.setOnCheckedChangeListener { _, v -> save { it.copy(haptics = v) } }
@@ -116,19 +143,24 @@ class MainActivity : AppCompatActivity() {
             binding.lblRepeatInterval.text = getString(R.string.pref_repeat_interval) + ": $v"
             save { it.copy(repeatIntervalMs = v) }
         })
+        binding.seekBgDim.setOnSeekBarChangeListener(simpleSeek { p ->
+            binding.lblBgDim.text = getString(R.string.bg_dim_label, p)
+            save { it.copy(backgroundDim = p) }
+        })
     }
 
     private fun save(transform: (KbSettings) -> KbSettings) {
         lifecycleScope.launch { repo.update(transform) }
     }
 
-    private fun simpleSeek(onChange: (Int) -> Unit) = object : android.widget.SeekBar.OnSeekBarChangeListener {
-        override fun onProgressChanged(sb: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
-            if (fromUser) onChange(progress)
+    private fun simpleSeek(onChange: (Int) -> Unit) =
+        object : android.widget.SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(sb: android.widget.SeekBar?, progress: Int, fromUser: Boolean) {
+                if (fromUser) onChange(progress)
+            }
+            override fun onStartTrackingTouch(sb: android.widget.SeekBar?) {}
+            override fun onStopTrackingTouch(sb: android.widget.SeekBar?) {}
         }
-        override fun onStartTrackingTouch(sb: android.widget.SeekBar?) {}
-        override fun onStopTrackingTouch(sb: android.widget.SeekBar?) {}
-    }
 
     private fun isImeEnabled(): Boolean {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager

@@ -1,0 +1,89 @@
+{
+  "id": "symbols2",
+  "label": "Symbols 2",
+  "rows": [
+    {
+      "heightWeight": 1.0,
+      "keys": [
+        { "label": "Esc", "type": "KEYCODE", "keyCode": 111, "widthWeight": 1.2 },
+        { "label": "Home", "type": "KEYCODE", "keyCode": 122 },
+        { "label": "End", "type": "KEYCODE", "keyCode": 123 },
+        { "label": "PgUp", "type": "KEYCODE", "keyCode": 92, "repeatable": true },
+        { "label": "PgDn", "type": "KEYCODE", "keyCode": 93, "repeatable": true },
+        { "label": "Ins", "type": "KEYCODE", "keyCode": 124 },
+        { "label": "Del", "type": "KEYCODE", "keyCode": 112, "repeatable": true },
+        { "label": "PrtSc", "type": "KEYCODE", "keyCode": 120 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "€", "output": "€" },
+        { "label": "£", "output": "£" },
+        { "label": "¥", "output": "¥" },
+        { "label": "¢", "output": "¢" },
+        { "label": "₹", "output": "₹" },
+        { "label": "₩", "output": "₩" },
+        { "label": "©", "output": "©" },
+        { "label": "®", "output": "®" },
+        { "label": "™", "output": "™" },
+        { "label": "§", "output": "§" },
+        { "label": "Bksp", "type": "KEYCODE", "keyCode": 67, "repeatable": true, "widthWeight": 1.5 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "±", "output": "±" },
+        { "label": "×", "output": "×" },
+        { "label": "÷", "output": "÷" },
+        { "label": "√", "output": "√" },
+        { "label": "π", "output": "π" },
+        { "label": "∞", "output": "∞" },
+        { "label": "≈", "output": "≈" },
+        { "label": "≠", "output": "≠" },
+        { "label": "≤", "output": "≤" },
+        { "label": "≥", "output": "≥" }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "°", "output": "°" },
+        { "label": "µ", "output": "µ" },
+        { "label": "∆", "output": "∆" },
+        { "label": "∑", "output": "∑" },
+        { "label": "•", "output": "•" },
+        { "label": "·", "output": "·" },
+        { "label": "¶", "output": "¶" },
+        { "label": "†", "output": "†" },
+        { "label": "‡", "output": "‡" },
+        { "label": "Enter", "type": "KEYCODE", "keyCode": 66, "widthWeight": 1.5 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "✓", "output": "✓" },
+        { "label": "✗", "output": "✗" },
+        { "label": "★", "output": "★" },
+        { "label": "☆", "output": "☆" },
+        { "label": "♥", "output": "♥" },
+        { "label": "←", "output": "←" },
+        { "label": "→", "output": "→" },
+        { "label": "↑", "output": "↑" },
+        { "label": "↓", "output": "↓" },
+        { "label": "…", "output": "…" }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "ABC", "type": "LAYOUT_SWITCH", "switchTo": "qwerty", "widthWeight": 1.4 },
+        { "label": "?123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1.3 },
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL" },
+        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT" },
+        { "label": ",", "output": "," },
+        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 4.0 },
+        { "label": ".", "output": "." },
+        { "label": "Tab", "type": "KEYCODE", "keyCode": 61 },
+        { "label": "🌐", "type": "IME_SWITCH" }
+      ]
+    }
+  ]
+}

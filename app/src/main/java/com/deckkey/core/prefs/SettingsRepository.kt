@@ -1,6 +1,7 @@
 package com.deckkey.core.prefs
 
 import android.content.Context
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -25,36 +26,31 @@ class SettingsRepository(private val context: Context) {
         val REPEAT_DELAY = intPreferencesKey("repeat_initial_delay")
         val REPEAT_INTERVAL = intPreferencesKey("repeat_interval")
         val MODIFIER_MODE = stringPreferencesKey("modifier_mode")
+        val THEME_ID = stringPreferencesKey("theme_id")
+        val BACKGROUND_URI = stringPreferencesKey("background_uri")
+        val BACKGROUND_DIM = intPreferencesKey("background_dim")
     }
 
-    val settings: Flow<Settings> = context.dataStore.data.map { p ->
-        Settings(
-            haptics = p[Keys.HAPTICS] ?: Settings.DEFAULT.haptics,
-            sound = p[Keys.SOUND] ?: Settings.DEFAULT.sound,
-            previewPopup = p[Keys.PREVIEW] ?: Settings.DEFAULT.previewPopup,
-            keyHeightDp = p[Keys.KEY_HEIGHT] ?: Settings.DEFAULT.keyHeightDp,
-            repeatInitialDelayMs = p[Keys.REPEAT_DELAY] ?: Settings.DEFAULT.repeatInitialDelayMs,
-            repeatIntervalMs = p[Keys.REPEAT_INTERVAL] ?: Settings.DEFAULT.repeatIntervalMs,
-            modifierMode = runCatching {
-                ModifierMode.valueOf(p[Keys.MODIFIER_MODE] ?: "")
-            }.getOrDefault(Settings.DEFAULT.modifierMode),
-        )
-    }
+    private fun read(p: Preferences): Settings = Settings(
+        haptics = p[Keys.HAPTICS] ?: Settings.DEFAULT.haptics,
+        sound = p[Keys.SOUND] ?: Settings.DEFAULT.sound,
+        previewPopup = p[Keys.PREVIEW] ?: Settings.DEFAULT.previewPopup,
+        keyHeightDp = p[Keys.KEY_HEIGHT] ?: Settings.DEFAULT.keyHeightDp,
+        repeatInitialDelayMs = p[Keys.REPEAT_DELAY] ?: Settings.DEFAULT.repeatInitialDelayMs,
+        repeatIntervalMs = p[Keys.REPEAT_INTERVAL] ?: Settings.DEFAULT.repeatIntervalMs,
+        modifierMode = runCatching {
+            ModifierMode.valueOf(p[Keys.MODIFIER_MODE] ?: "")
+        }.getOrDefault(Settings.DEFAULT.modifierMode),
+        themeId = p[Keys.THEME_ID] ?: Settings.DEFAULT.themeId,
+        backgroundUri = p[Keys.BACKGROUND_URI] ?: Settings.DEFAULT.backgroundUri,
+        backgroundDim = p[Keys.BACKGROUND_DIM] ?: Settings.DEFAULT.backgroundDim,
+    )
+
+    val settings: Flow<Settings> = context.dataStore.data.map { read(it) }
 
     suspend fun update(transform: (Settings) -> Settings) {
         context.dataStore.edit { p ->
-            val current = Settings(
-                haptics = p[Keys.HAPTICS] ?: Settings.DEFAULT.haptics,
-                sound = p[Keys.SOUND] ?: Settings.DEFAULT.sound,
-                previewPopup = p[Keys.PREVIEW] ?: Settings.DEFAULT.previewPopup,
-                keyHeightDp = p[Keys.KEY_HEIGHT] ?: Settings.DEFAULT.keyHeightDp,
-                repeatInitialDelayMs = p[Keys.REPEAT_DELAY] ?: Settings.DEFAULT.repeatInitialDelayMs,
-                repeatIntervalMs = p[Keys.REPEAT_INTERVAL] ?: Settings.DEFAULT.repeatIntervalMs,
-                modifierMode = runCatching {
-                    ModifierMode.valueOf(p[Keys.MODIFIER_MODE] ?: "")
-                }.getOrDefault(Settings.DEFAULT.modifierMode),
-            )
-            val next = transform(current)
+            val next = transform(read(p))
             p[Keys.HAPTICS] = next.haptics
             p[Keys.SOUND] = next.sound
             p[Keys.PREVIEW] = next.previewPopup
@@ -62,6 +58,9 @@ class SettingsRepository(private val context: Context) {
             p[Keys.REPEAT_DELAY] = next.repeatInitialDelayMs
             p[Keys.REPEAT_INTERVAL] = next.repeatIntervalMs
             p[Keys.MODIFIER_MODE] = next.modifierMode.name
+            p[Keys.THEME_ID] = next.themeId
+            p[Keys.BACKGROUND_URI] = next.backgroundUri
+            p[Keys.BACKGROUND_DIM] = next.backgroundDim
         }
     }
 }

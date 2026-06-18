@@ -26,4 +26,10 @@
     <string name="pref_repeat_interval">Key repeat interval (ms)</string>
     <string name="pref_modifier_mode">Modifier behavior</string>
     <string name="try_it">Try the keyboard here</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="pref_theme">Theme</string>
+    <string name="pref_background">Keyboard Background (Gallery)</string>
+    <string name="btn_pick_bg">Pick Image</string>
+    <string name="btn_clear_bg">Clear Image</string>
+    <string name="bg_dim_label">Background Dim: %d%%</string>
 </resources>
