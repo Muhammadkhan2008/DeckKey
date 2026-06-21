@@ -1,0 +1,56 @@
+{
+  "id": "urdu",
+  "label": "اردو",
+  "rows": [
+    {
+      "keys": [
+        { "label": "ق", "output": "ق" },
+        { "label": "و", "output": "و" },
+        { "label": "ع", "output": "ع" },
+        { "label": "ر", "output": "ر" },
+        { "label": "ت", "output": "ت" },
+        { "label": "ے", "output": "ے" },
+        { "label": "ء", "output": "ء" },
+        { "label": "ی", "output": "ی" },
+        { "label": "ہ", "output": "ہ" },
+        { "label": "پ", "output": "پ" }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "ا", "output": "ا" },
+        { "label": "س", "output": "س" },
+        { "label": "د", "output": "د" },
+        { "label": "ف", "output": "ف" },
+        { "label": "گ", "output": "گ" },
+        { "label": "ح", "output": "ح" },
+        { "label": "ج", "output": "ج" },
+        { "label": "ک", "output": "ک" },
+        { "label": "ل", "output": "ل" }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "Shift", "type": "MODIFIER", "modifier": "SHIFT", "widthWeight": 1.5 },
+        { "label": "ز", "output": "ز" },
+        { "label": "خ", "output": "خ" },
+        { "label": "چ", "output": "چ" },
+        { "label": "ط", "output": "ط" },
+        { "label": "ش", "output": "ش" },
+        { "label": "ن", "output": "ن" },
+        { "label": "م", "output": "م" },
+        { "label": "Bksp", "keyCode": 67, "type": "KEYCODE", "repeatable": true, "widthWeight": 1.5 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1.0 },
+        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 1.0 },
+        { "label": "🌐", "type": "LAYOUT_SWITCH", "switchTo": "next_lang", "widthWeight": 1.0 },
+        { "label": "Space", "output": " ", "widthWeight": 3.8 },
+        { "label": "۔", "output": "۔", "widthWeight": 1.0 },
+        { "label": "Enter", "keyCode": 66, "type": "KEYCODE", "widthWeight": 1.0 }
+      ]
+    }
+  ]
+}

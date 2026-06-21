@@ -40,7 +40,12 @@ class SpeechInputController(
             onError("Speech recognition not available on this device")
             return
         }
-        val r = SpeechRecognizer.createSpeechRecognizer(context).also { recognizer = it }
+        val r = try {
+            SpeechRecognizer.createSpeechRecognizer(context).also { recognizer = it }
+        } catch (e: Exception) {
+            onError("Failed to create SpeechRecognizer: ${e.message}")
+            return
+        }
         r.setRecognitionListener(listener)
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
@@ -81,7 +86,8 @@ class SpeechInputController(
                 ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 ?.firstOrNull()
                 .orEmpty()
-            commit(if (best.isNotBlank()) "$best " else "")
+            val processed = convertWordsToNumbers(best)
+            commit(if (processed.isNotBlank()) "$processed " else "")
             stop()
         }
 
@@ -108,5 +114,22 @@ class SpeechInputController(
         SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Recognizer busy"
         SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "No speech input"
         else -> "Speech error ($code)"
+    }
+
+    private fun convertWordsToNumbers(text: String): String {
+        var result = text
+        val numberMap = mapOf(
+            "zero" to "0", "one" to "1", "two" to "2", "three" to "3", "four" to "4",
+            "five" to "5", "six" to "6", "seven" to "7", "eight" to "8", "nine" to "9",
+            "ten" to "10",
+            "एक" to "1", "दो" to "2", "तीन" to "3", "चार" to "4", "पांच" to "5", "छह" to "6", "सात" to "7", "आठ" to "8", "नौ" to "9", "दस" to "10",
+            "ایک" to "1", "دو" to "2", "تین" to "3", "چار" to "4", "پانچ" to "5", "چھ" to "6", "سات" to "7", "آٹھ" to "8", "نو" to "9", "دس" to "10",
+            "ek" to "1", "do" to "2", "teen" to "3", "chaar" to "4", "paanch" to "5", "che" to "6", "saat" to "7", "aath" to "8", "nau" to "9", "das" to "10"
+        )
+        for ((word, digit) in numberMap) {
+            val regex = "\\b$word\\b".toRegex(RegexOption.IGNORE_CASE)
+            result = result.replace(regex, digit)
+        }
+        return result
     }
 }

@@ -31,11 +31,8 @@ class KeyPreviewPopup(context: Context) {
 
     private val location = IntArray(2)
 
-    fun show(anchor: View, pk: PositionedKey) {
-        val text = pk.key.let { k ->
-            if (k.shiftLabel != null) k.label else k.baseOutput
-        }
-        content.text = text
+    fun show(anchor: View, pk: PositionedKey, label: String) {
+        content.text = label
 
         val w = dp(54f).toInt()
         val h = dp(64f).toInt()

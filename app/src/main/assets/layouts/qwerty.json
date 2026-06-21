@@ -92,11 +92,11 @@
     },
     {
       "keys": [
-        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1.3 },
-        { "label": "Win", "type": "MODIFIER", "modifier": "META", "widthWeight": 1.1 },
-        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 1.1 },
-        { "label": "?123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1.3 },
-        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 4.0 },
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1.0 },
+        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 1.0 },
+        { "label": "🌐", "type": "LAYOUT_SWITCH", "switchTo": "next_lang", "widthWeight": 1.0 },
+        { "label": "?123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1.2 },
+        { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 3.6 },
         { "label": "←", "type": "KEYCODE", "keyCode": 21, "repeatable": true },
         { "label": "↑", "type": "KEYCODE", "keyCode": 19, "repeatable": true },
         { "label": "↓", "type": "KEYCODE", "keyCode": 20, "repeatable": true },

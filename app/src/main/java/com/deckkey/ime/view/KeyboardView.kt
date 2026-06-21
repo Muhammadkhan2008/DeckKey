@@ -51,8 +51,8 @@ class KeyboardView @JvmOverloads constructor(
     var listener: Listener? = null
     var modifiers: ModifierStateManager? = null
 
-    // IMPROVEMENT: Mobile-friendly default key height (larger for thumb typing)
-    var keyHeightPx: Float = dp(56f)
+    // IMPROVEMENT: Mobile-friendly default key height (46dp for standard PC-like ergonomics)
+    var keyHeightPx: Float = dp(46f)
         set(value) { field = value; requestLayout() }
 
     var previewEnabled: Boolean = true
@@ -233,25 +233,45 @@ class KeyboardView @JvmOverloads constructor(
             else -> false
         }
 
-        keyFill.color = when {
+        val baseColor = when {
             modActive -> colModActive
             pressed && special -> colSpecialDown
             pressed -> colNormalDown
             special -> colSpecial
             else -> colNormal
         }
-        canvas.drawRoundRect(r, cornerRadius, cornerRadius, keyFill)
+
+        // Draw shadow first (3D mechanical key depth effect)
+        val shadowHeight = dp(2f)
+        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = adjustColorBrightness(baseColor, 0.65f)
+        }
+        val shadowR = RectF(r.left, r.top + shadowHeight, r.right, r.bottom + shadowHeight)
+        canvas.drawRoundRect(shadowR, cornerRadius, cornerRadius, shadowPaint)
+
+        // Draw key face slightly elevated
+        val faceR = RectF(r.left, r.top, r.right, r.bottom)
+        keyFill.color = baseColor
+        val shader = android.graphics.LinearGradient(
+            faceR.left, faceR.top, faceR.left, faceR.bottom,
+            baseColor,
+            adjustColorBrightness(baseColor, 0.82f),
+            android.graphics.Shader.TileMode.CLAMP
+        )
+        keyFill.shader = shader
+        canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+        keyFill.shader = null
 
         // primary label
         val cx = r.centerX()
-        val baseline = r.centerY() - (keyText.descent() + keyText.ascent()) / 2f
+        val baseline = faceR.centerY() - (keyText.descent() + keyText.ascent()) / 2f
         keyText.color = if (modActive) Color.WHITE else theme.text
         val label = labelFor(key, mods)
-        keyText.textSize = if (key.label.length > 2) dp(13f) else dp(17f)
+        keyText.textSize = if (key.label.length > 2) dp(12f) else dp(16f)
         canvas.drawText(label, cx, baseline, keyText)
 
         // hint (corner)
-        key.hint?.let { canvas.drawText(it, r.right - dp(9f), r.top + dp(13f), hintText) }
+        key.hint?.let { canvas.drawText(it, faceR.right - dp(9f), faceR.top + dp(13f), hintText) }
 
         // lock indicator dot for LOCKED modifiers / caps lock
         val locked = (key.type == KeyType.MODIFIER && key.modifier != null &&
@@ -259,8 +279,16 @@ class KeyboardView @JvmOverloads constructor(
             (key.type == KeyType.CAPS_LOCK && mods?.capsLock == true)
         if (locked) {
             keyFill.color = Color.WHITE
-            canvas.drawCircle(r.left + dp(8f), r.top + dp(8f), dp(2.5f), keyFill)
+            canvas.drawCircle(faceR.left + dp(8f), faceR.top + dp(8f), dp(2.5f), keyFill)
         }
+    }
+
+    private fun adjustColorBrightness(color: Int, factor: Float): Int {
+        val a = Color.alpha(color)
+        val r = Math.round(Color.red(color) * factor).coerceIn(0, 255)
+        val g = Math.round(Color.green(color) * factor).coerceIn(0, 255)
+        val b = Math.round(Color.blue(color) * factor).coerceIn(0, 255)
+        return Color.argb(a, r, g, b)
     }
 
     private fun labelFor(key: Key, mods: ModifierStateManager?): String {
@@ -317,7 +345,7 @@ class KeyboardView @JvmOverloads constructor(
                 listener?.onRepeatStart(key)
             }
         }
-        if (previewEnabled && shouldPreview(key)) preview.show(this, pk)
+        if (previewEnabled && shouldPreview(key)) preview.show(this, pk, labelFor(key, modifiers))
         invalidate()
     }
 
@@ -343,7 +371,7 @@ class KeyboardView @JvmOverloads constructor(
             val mk = moved.key
             if (mk.type != KeyType.MODIFIER) {
                 listener?.onKeyDown(mk)
-                if (previewEnabled && shouldPreview(mk)) preview.show(this, moved)
+                if (previewEnabled && shouldPreview(mk)) preview.show(this, moved, labelFor(mk, modifiers))
             }
             invalidate()
         } else {

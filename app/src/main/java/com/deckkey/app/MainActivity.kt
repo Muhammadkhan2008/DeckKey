@@ -41,12 +41,13 @@ class MainActivity : AppCompatActivity() {
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri ?: return@registerForActivityResult
-            // Persist read permission across reboots
-            contentResolver.takePersistableUriPermission(
-                uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            save { it.copy(backgroundUri = uri.toString()) }
-            Toast.makeText(this, "Background image set", Toast.LENGTH_SHORT).show()
+            val localPath = saveUriToInternalStorage(uri)
+            if (localPath != null) {
+                save { it.copy(backgroundUri = localPath) }
+                Toast.makeText(this, "Background image set successfully", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Failed to load background image", Toast.LENGTH_SHORT).show()
+            }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -170,5 +171,20 @@ class MainActivity : AppCompatActivity() {
     private fun isImeActive(): Boolean {
         val id = Settings.Secure.getString(contentResolver, Settings.Secure.DEFAULT_INPUT_METHOD)
         return id?.startsWith(packageName) == true
+    }
+
+    private fun saveUriToInternalStorage(uri: Uri): String? {
+        return try {
+            val file = java.io.File(filesDir, "keyboard_background.jpg")
+            contentResolver.openInputStream(uri)?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Failed to save image to internal storage", e)
+            null
+        }
     }
 }

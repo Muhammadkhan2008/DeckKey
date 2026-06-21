@@ -29,8 +29,10 @@ class KeyDispatcher(
     private val onLayoutSwitch: (String) -> Unit,
     private val onImeSwitch: () -> Unit,
     private val onMic: () -> Unit = {},
+    private val onAltF4: () -> Unit = {},
 ) {
     private val charMap = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD)
+    private var lastSpaceTime = 0L
 
     /** Process a fully-completed tap on [key]. [ic] may be null if no field is focused. */
     fun dispatch(key: Key, ic: InputConnection?) {
@@ -41,13 +43,40 @@ class KeyDispatcher(
             KeyType.IME_SWITCH -> onImeSwitch()
             KeyType.MIC -> onMic()
             KeyType.KEYCODE -> {
-                if (ic != null) sendKeyCode(ic, key.keyCode)
+                if (ic != null) {
+                    val alt = modifiers.isActive(Modifier.ALT)
+                    if (alt && key.keyCode == 134) { // Alt + F4
+                        onAltF4()
+                    } else if (key.keyCode == 135) { // F5
+                        // Send Ctrl + R (Universal Browser Refresh Shortcut)
+                        val now = System.currentTimeMillis()
+                        val metaCtrl = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
+                        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_R, 0, metaCtrl))
+                        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_R, 0, metaCtrl))
+                    } else if (key.keyCode == 62) { // Space key
+                        handleSpace(ic)
+                    } else {
+                        sendKeyCode(ic, key.keyCode)
+                    }
+                }
                 modifiers.consumeAfterKey()
             }
             KeyType.CHAR -> {
                 if (ic != null) emitChar(ic, key)
                 modifiers.consumeAfterKey()
             }
+        }
+    }
+
+    private fun handleSpace(ic: InputConnection) {
+        val now = System.currentTimeMillis()
+        if (now - lastSpaceTime < 300L) {
+            ic.deleteSurroundingText(1, 0)
+            ic.commitText(". ", 1)
+            lastSpaceTime = 0L
+        } else {
+            ic.commitText(" ", 1)
+            lastSpaceTime = now
         }
     }
 
@@ -71,6 +100,11 @@ class KeyDispatcher(
                 // Fallback: try to commit the label
                 ic.commitText(key.label, 1)
             }
+            return
+        }
+
+        if (key.baseOutput == " ") {
+            handleSpace(ic)
             return
         }
 

@@ -67,6 +67,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
             onLayoutSwitch = { id -> switchLayout(id) },
             onImeSwitch = { switchToNextIme() },
             onMic = { onMicTapped() },
+            onAltF4 = { showPowerMenuDialog() },
         )
         settingsRepo = SettingsRepository(this)
         currentLayoutId = layouts.defaultLayoutId
@@ -126,18 +127,19 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
 
     private fun loadBackgroundBitmap(uriString: String, dim: Int) {
         try {
-            val uri = android.net.Uri.parse(uriString)
-            val stream = contentResolver.openInputStream(uri) ?: run {
-                Log.w("DeckKey", "Could not open input stream for URI: $uriString")
-                return
+            val bmp = if (uriString.startsWith("content://") || uriString.startsWith("file://")) {
+                val uri = android.net.Uri.parse(uriString)
+                contentResolver.openInputStream(uri)?.use { stream ->
+                    android.graphics.BitmapFactory.decodeStream(stream)
+                }
+            } else {
+                android.graphics.BitmapFactory.decodeFile(uriString)
             }
-            val bmp = android.graphics.BitmapFactory.decodeStream(stream)
-            stream.close()
 
             if (bmp != null) {
                 keyboardView?.setBackgroundImage(bmp, dim)
             } else {
-                Log.w("DeckKey", "Failed to decode bitmap from URI: $uriString")
+                Log.w("DeckKey", "Failed to decode bitmap from: $uriString")
                 keyboardView?.setBackgroundImage(null, 0)
             }
         } catch (e: java.io.FileNotFoundException) {
@@ -153,8 +155,20 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     private fun switchLayout(id: String) {
-        currentLayoutId = id
-        keyboardView?.setLayout(layouts.load(id))
+        val nextId = if (id == "next_lang") {
+            getNextLanguageId(currentLayoutId)
+        } else {
+            id
+        }
+        currentLayoutId = nextId
+        keyboardView?.setLayout(layouts.load(nextId))
+    }
+
+    private fun getNextLanguageId(current: String): String {
+        val langs = listOf("qwerty", "hindi", "urdu", "chinese")
+        val idx = langs.indexOf(current)
+        if (idx == -1) return "qwerty"
+        return langs[(idx + 1) % langs.size]
     }
 
     private fun switchToNextIme() {
@@ -211,6 +225,24 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     private fun onRepeatTick(key: Key) {
         // Re-dispatch the held key (arrows, backspace, space) at the repeat interval.
         dispatcher.dispatch(key, currentInputConnection)
+    }
+
+    private fun showPowerMenuDialog() {
+        val builder = android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+        builder.setTitle("DeckKey Power Options")
+        builder.setMessage("Select power action:")
+        builder.setPositiveButton("Power Off") { _, _ ->
+            Toast.makeText(this, "Shutting down... (Requires System Permissions/Root)", Toast.LENGTH_LONG).show()
+            try { Runtime.getRuntime().exec("reboot -p") } catch (_: Exception) {}
+        }
+        builder.setNegativeButton("Restart") { _, _ ->
+            Toast.makeText(this, "Restarting... (Requires System Permissions/Root)", Toast.LENGTH_LONG).show()
+            try { Runtime.getRuntime().exec("reboot") } catch (_: Exception) {}
+        }
+        builder.setNeutralButton("Cancel") { dialog, _ -> dialog.dismiss() }
+        val dialog = builder.create()
+        dialog.window?.setType(android.view.WindowManager.LayoutParams.TYPE_INPUT_METHOD)
+        dialog.show()
     }
 
     override fun onDestroy() {
