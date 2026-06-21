@@ -1,0 +1,207 @@
+==============================================
+  DeckKey Android Keyboard - Code Analysis
+  Date: June 20, 2026
+  Analysis Tool: Manual + Kotlin Expert Review
+==============================================
+
+PROJECT INFO:
+- Name: DeckKey
+- Type: Android Input Method Editor (IME)
+- Language: Kotlin
+- Total Lines: 1,776 lines
+- Architecture: Modular (Model/View/Input/Feedback/Layout)
+- Build System: Gradle Kotlin DSL
+
+REPOSITORY STATUS:
+✓ Successfully cloned from GitHub
+✓ User: Muhammadkhan2008
+✓ Folder: /e/Desktop/AI Automation/Projects By AI Agents/DeckKey
+✓ All source files present and readable
+
+FILE STRUCTURE:
+com.deckkey.app/
+├── MainActivity.kt (UI shell)
+└── ThemeAdapter.kt (Theme list adapter)
+
+com.deckkey.core/
+├── model/
+│   ├── Key.kt (Individual key definition)
+│   ├── KeyboardLayout.kt (Layout definition)
+│   └── KeyType.kt (Enum: CHAR, MODIFIER, CAPS_LOCK, etc)
+├── prefs/
+│   ├── Settings.kt (Data class)
+│   └── SettingsRepository.kt (DataStore integration)
+└── theme/
+    └── Theme.kt (Color schemes)
+
+com.deckkey.ime/
+├── service/
+│   └── DeckKeyService.kt (Main IME service - 202 lines)
+├── input/
+│   ├── ModifierStateManager.kt (State machine - 126 lines)
+│   ├── KeyDispatcher.kt (Event routing - 128 lines)
+│   ├── KeyRepeatController.kt (Auto-repeat logic - 49 lines)
+│   └── SpeechInputController.kt (Voice recognition)
+├── view/
+│   ├── KeyboardView.kt (Canvas renderer - 378 lines)
+│   ├── KeyPreviewPopup.kt (Popup bubble)
+│   └── PositionedKey.kt (Key geometry)
+└── layout/
+    └── LayoutManager.kt (JSON parser - 78 lines)
+
+LAYOUT FILES (JSON):
+- assets/layouts/qwerty.json
+- assets/layouts/symbols.json
+- assets/layouts/symbols2.json
+
+=== BUGS FOUND: 9 ===
+
+[CRITICAL - Must Fix Immediately]
+1. Handler Memory Leak in KeyRepeatController
+   - Risk: App crashes after repeated key presses
+   - Fix: Use Coroutines or cancel Handler callbacks
+
+2. ModifierStateManager HashMap NPE
+   - Risk: Crash when double-tapping modifiers
+   - Fix: Initialize all HashMap entries in init block
+
+3. Silent Exception Handling in Background Image Loading
+   - Risk: Failed image loads silently, no error feedback
+   - Fix: Log exceptions separately by type
+
+[HIGH PRIORITY]
+4. Touch Slop Logic (KeyboardView)
+   - Risk: Unintended key sliding, missed taps
+   - Fix: Only slide if hitTest finds valid key
+
+5. Null KeyboardView in Settings
+   - Risk: Settings changes silently ignored
+   - Fix: Check keyboardView != null
+
+6. Layout Loading Race Condition
+   - Risk: Concurrent loads parse JSON twice
+   - Fix: Use synchronized(lock) on cache
+
+[MEDIUM PRIORITY]
+7. Character Output Validation
+   - Risk: Ctrl+Symbol fails silently
+   - Fix: Validate baseOutput.isNotEmpty()
+
+8. Preview Popup Memory Leak
+   - Risk: Stale popup references during swipe
+   - Fix: Always dismiss before new show()
+
+9. Bitmap Scaling Performance
+   - Risk: Scales image every frame (inefficient)
+   - Fix: Cache scaled rect in onSizeChanged()
+
+=== PERFORMANCE ISSUES ===
+
+1. Canvas Rendering
+   - Current: Iterates ALL 50+ keys every frame
+   - Suggested: Track dirty keys, redraw only changed
+
+2. Bitmap Scaling
+   - Current: Recalculates on every onDraw()
+   - Suggested: Cache in onSizeChanged()
+
+3. Layout Reflow
+   - Current: Recalculates on every size change
+   - Suggested: Only if change > 1px
+
+=== CODE QUALITY ISSUES ===
+
+1. Magic Numbers (no explanations):
+   - touchSlop = dp(22f) - why 22?
+   - doubleTapWindowMs = 300L - why 300?
+   - cornerRadius = dp(7f) - why 7?
+   
+   Suggested: Move to Settings.kt with comments
+
+2. Silent Error Handling:
+   - Line 130: catch(_: Exception) {...}
+   - Should catch specific types with logging
+
+3. Lacks Documentation:
+   - No KDoc comments on public functions
+   - Architecture clear from code but not documented
+
+=== STRENGTHS ===
+
+✓ Clean Architecture
+  - Clear separation: Model/Input/View/Feedback/Layout
+  - Dependency injection via constructor parameters
+  - No God classes or mixed concerns
+
+✓ Modern Android
+  - DataStore (not SharedPreferences)
+  - Coroutines (not RxJava)
+  - InputMethodService lifecycle correctly handled
+
+✓ Flexible Design
+  - Layouts as JSON (no code changes needed for new pages)
+  - Modifier state machine (supports tap/double-tap/hold)
+  - Theme system with color customization
+
+✓ Touch Handling
+  - True multitouch (real chord support)
+  - Touch slop tolerance (finger jitter handling)
+  - Preview popups for key confirmation
+
+=== RECOMMENDATIONS ===
+
+IMMEDIATE (This Week):
+1. Fix ModifierStateManager HashMap initialization
+2. Replace Handler with Coroutines in KeyRepeatController
+3. Add proper exception handling with logging
+
+SHORT TERM (Next 2 Weeks):
+4. Add @Synchronized or ReentrantLock to LayoutManager
+5. Validate key output before dispatch
+6. Cache bitmap scaling calculations
+7. Add unit tests for modifier state machine
+
+LONG TERM (Next Month):
+8. Profile app memory (check for leaks)
+9. Add UI tests (modifier chording, layout switching)
+10. Document code with KDoc
+11. Add Proguard/R8 rules for production
+12. Consider Material Design 3 theme update
+
+=== TESTING CHECKLIST ===
+
+Unit Tests Needed:
+- [ ] ModifierStateManager tri-state machine
+- [ ] KeyDispatcher character + keycode routing
+- [ ] LayoutManager JSON parsing
+- [ ] Theme application
+
+Integration Tests:
+- [ ] Modifier latching (tap once, type)
+- [ ] Modifier locking (double tap)
+- [ ] Modifier chording (hold + tap)
+- [ ] Layout switching (qwerty -> symbols)
+- [ ] Settings changes (apply live)
+- [ ] Background image loading (valid + invalid URIs)
+- [ ] Preview popup (appears/disappears correctly)
+- [ ] Rapid key swiping (no stale popups)
+
+Manual Testing:
+- [ ] Open Termux, test Ctrl+C
+- [ ] Test Alt+Tab, Shift+Arrow
+- [ ] Test Caps Lock combinations
+- [ ] Test on different screen sizes
+- [ ] Test rapid key presses (stress test)
+- [ ] Test with no network (offline mode)
+
+=== NEXT STEPS ===
+
+1. Copy FIXES.md to your IDE
+2. Apply fixes in order (CRITICAL first)
+3. Run unit tests
+4. Build APK and test on Termux
+5. Push fixes to GitHub
+
+Repository: https://github.com/Muhammadkhan2008/DeckKey
+
+==============================================

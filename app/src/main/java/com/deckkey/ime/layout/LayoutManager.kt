@@ -17,12 +17,17 @@ import org.json.JSONObject
 class LayoutManager(private val context: Context) {
 
     private val cache = mutableMapOf<String, KeyboardLayout>()
+    private val cacheLock = Any()  // FIX: Thread safety for concurrent layout loads
 
     /** Layout shown when the IME first opens. */
     val defaultLayoutId = "qwerty"
 
-    fun load(id: String): KeyboardLayout =
-        cache.getOrPut(id) { parse(readAsset("layouts/$id.json")) }
+    fun load(id: String): KeyboardLayout {
+        // FIX: Synchronize cache access to prevent race conditions
+        synchronized(cacheLock) {
+            return cache.getOrPut(id) { parse(readAsset("layouts/$id.json")) }
+        }
+    }
 
     private fun readAsset(path: String): String =
         context.assets.open(path).bufferedReader().use { it.readText() }

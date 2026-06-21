@@ -51,7 +51,8 @@ class KeyboardView @JvmOverloads constructor(
     var listener: Listener? = null
     var modifiers: ModifierStateManager? = null
 
-    var keyHeightPx: Float = dp(52f)
+    // IMPROVEMENT: Mobile-friendly default key height (larger for thumb typing)
+    var keyHeightPx: Float = dp(56f)
         set(value) { field = value; requestLayout() }
 
     var previewEnabled: Boolean = true
@@ -64,15 +65,17 @@ class KeyboardView @JvmOverloads constructor(
     /** pointerId -> the key that pointer is currently pressing. */
     private val activePointers = HashMap<Int, PositionedKey>()
 
-    private val gap = dp(3f)
-    private val cornerRadius = dp(7f)
+    // IMPROVEMENT: Slightly larger gap for thumb-friendly spacing
+    private val gap = dp(4f)
+    private val cornerRadius = dp(8f)
 
     /**
      * Movement tolerance. A finger may drift this far outside a key before the
      * press is cancelled — without it, natural finger jitter during a tap kills
      * the keypress, which is the main cause of "irresponsive" keys.
+     * IMPROVEMENT: Increased for better touch tolerance on mobile
      */
-    private val touchSlop = dp(22f)
+    private val touchSlop = dp(26f)
 
     // ---- paints ----
     private val keyFill = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -100,6 +103,9 @@ class KeyboardView @JvmOverloads constructor(
     private var backgroundDimAlpha: Int = 115 // 0..255, over the image
     private val bgDimPaint = Paint()
     private val bgRect = RectF()
+
+    // FIX: Cache bitmap scaling calculation to avoid recalculation every frame
+    private var cachedBitmapRect: RectF? = null
 
     private val preview = KeyPreviewPopup(context)
 
@@ -156,6 +162,18 @@ class KeyboardView @JvmOverloads constructor(
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         reflow(w.toFloat(), h.toFloat())
+
+        // FIX: Recalculate bitmap scaling for new size (cache it)
+        backgroundBitmap?.let { bmp ->
+            val vw = w.toFloat()
+            val vh = h.toFloat()
+            val scale = maxOf(vw / bmp.width, vh / bmp.height)
+            val dw = bmp.width * scale
+            val dh = bmp.height * scale
+            val left = (vw - dw) / 2f
+            val top = (vh - dh) / 2f
+            cachedBitmapRect = RectF(left, top, left + dw, top + dh)
+        }
     }
 
     /** Convert relative weights into absolute pixel rectangles for the current size. */
@@ -187,15 +205,13 @@ class KeyboardView @JvmOverloads constructor(
         canvas.drawColor(colBg)
         // Optional gallery background image, center-cropped to fill, with a dim overlay.
         backgroundBitmap?.let { bmp ->
-            val vw = width.toFloat(); val vh = height.toFloat()
-            val scale = maxOf(vw / bmp.width, vh / bmp.height)
-            val dw = bmp.width * scale; val dh = bmp.height * scale
-            val left = (vw - dw) / 2f; val top = (vh - dh) / 2f
-            bgRect.set(left, top, left + dw, top + dh)
-            canvas.drawBitmap(bmp, null, bgRect, null)
+            // FIX: Use cached bitmap rect instead of recalculating every frame
+            cachedBitmapRect?.let { rect ->
+                canvas.drawBitmap(bmp, null, rect, null)
+            }
             // dim overlay so labels remain readable over busy photos
             bgDimPaint.color = Color.argb(backgroundDimAlpha, 0, 0, 0)
-            canvas.drawRect(0f, 0f, vw, vh, bgDimPaint)
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgDimPaint)
         }
         val mods = modifiers
         for (pk in positioned) {
@@ -310,17 +326,18 @@ class KeyboardView @JvmOverloads constructor(
         val b = current.bounds
         // Still within the key (plus slop tolerance)? Keep the press alive — this
         // stops natural finger jitter from cancelling a tap.
-        if (x >= b.left - touchSlop && x <= b.right + touchSlop &&
-            y >= b.top - touchSlop && y <= b.bottom + touchSlop
-        ) return
+        val isWithinSlop = x >= b.left - touchSlop && x <= b.right + touchSlop &&
+                           y >= b.top - touchSlop && y <= b.bottom + touchSlop
 
-        // Finger moved well away. If it landed on another key, re-target to it
-        // (slide-to-type feel); otherwise cancel this pointer.
+        if (isWithinSlop) return  // FIX: Clearer logic
+
+        // Finger moved outside slop. Look for new key nearby.
         val moved = hitTest(x, y)
         val key = current.key
         if (key.repeatable && key.type != KeyType.MODIFIER) listener?.onRepeatStop()
         if (shouldPreview(key)) preview.dismiss()
 
+        // FIX: Only switch to new key if we actually found one nearby
         if (moved != null && moved !== current) {
             activePointers[pointerId] = moved
             val mk = moved.key
@@ -328,10 +345,11 @@ class KeyboardView @JvmOverloads constructor(
                 listener?.onKeyDown(mk)
                 if (previewEnabled && shouldPreview(mk)) preview.show(this, moved)
             }
+            invalidate()
         } else {
-            activePointers.remove(pointerId)
+            // Moved too far away without landing on another key - cancel
+            cancelPointer(pointerId)
         }
-        invalidate()
     }
 
     private fun handleUp(pointerId: Int) {

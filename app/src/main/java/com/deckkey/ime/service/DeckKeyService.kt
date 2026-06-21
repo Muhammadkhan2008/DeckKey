@@ -2,6 +2,7 @@ package com.deckkey.ime.service
 
 import android.content.pm.PackageManager
 import android.inputmethodservice.InputMethodService
+import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
@@ -107,15 +108,18 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         feedback.soundEnabled = s.sound
         repeat.initialDelayMs = s.repeatInitialDelayMs.toLong()
         repeat.intervalMs = s.repeatIntervalMs.toLong()
-        keyboardView?.apply {
-            previewEnabled = s.previewPopup
-            keyHeightPx = s.keyHeightDp * resources.displayMetrics.density
-            applyTheme(Themes.byId(s.themeId))
+
+        // FIX: Check if keyboardView exists before applying settings
+        val view = keyboardView
+        if (view != null) {
+            view.previewEnabled = s.previewPopup
+            view.keyHeightPx = s.keyHeightDp * resources.displayMetrics.density
+            view.applyTheme(Themes.byId(s.themeId))
             // Load background image if a URI is set
             if (s.backgroundUri.isNotEmpty()) {
                 loadBackgroundBitmap(s.backgroundUri, s.backgroundDim)
             } else {
-                setBackgroundImage(null, 0)
+                view.setBackgroundImage(null, 0)
             }
         }
     }
@@ -123,11 +127,27 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     private fun loadBackgroundBitmap(uriString: String, dim: Int) {
         try {
             val uri = android.net.Uri.parse(uriString)
-            val bmp = android.graphics.BitmapFactory.decodeStream(
-                contentResolver.openInputStream(uri)
-            )
-            keyboardView?.setBackgroundImage(bmp, dim)
-        } catch (_: Exception) {
+            val stream = contentResolver.openInputStream(uri) ?: run {
+                Log.w("DeckKey", "Could not open input stream for URI: $uriString")
+                return
+            }
+            val bmp = android.graphics.BitmapFactory.decodeStream(stream)
+            stream.close()
+
+            if (bmp != null) {
+                keyboardView?.setBackgroundImage(bmp, dim)
+            } else {
+                Log.w("DeckKey", "Failed to decode bitmap from URI: $uriString")
+                keyboardView?.setBackgroundImage(null, 0)
+            }
+        } catch (e: java.io.FileNotFoundException) {
+            Log.w("DeckKey", "Background image file not found: $uriString", e)
+            keyboardView?.setBackgroundImage(null, 0)
+        } catch (e: SecurityException) {
+            Log.w("DeckKey", "Permission denied reading background image: $uriString", e)
+            keyboardView?.setBackgroundImage(null, 0)
+        } catch (e: Exception) {
+            Log.e("DeckKey", "Unexpected error loading background image", e)
             keyboardView?.setBackgroundImage(null, 0)
         }
     }
@@ -194,7 +214,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     override fun onDestroy() {
-        repeat.stop()
+        repeat.destroy()  // FIX: Properly cleanup repeat controller
         speech.stop()
         scope.cancel()
         super.onDestroy()

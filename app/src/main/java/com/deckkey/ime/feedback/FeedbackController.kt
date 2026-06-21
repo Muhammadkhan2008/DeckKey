@@ -12,6 +12,8 @@ import android.view.View
 /**
  * Centralizes tactile + audible key feedback so the view stays focused on drawing.
  * Both channels are independently toggleable via settings.
+ *
+ * IMPROVEMENT: Better keyboard-style sound and haptics for mobile
  */
 class FeedbackController(context: Context) {
 
@@ -30,19 +32,24 @@ class FeedbackController(context: Context) {
     /** Light tick on key-down. [view] is used for the system haptic fallback. */
     fun keyDown(view: View) {
         if (hapticsEnabled) vibrateTick(view)
-        if (soundEnabled) audio?.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, 0.6f)
+        // IMPROVEMENT: Use better keyboard sound effect with proper volume
+        if (soundEnabled) {
+            audio?.playSoundEffect(AudioManager.FX_KEY, 0.8f)  // Use FX_KEY for better click sound
+        }
     }
 
     private fun vibrateTick(view: View) {
         val v = vibrator
         if (v != null && v.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK))
+                // IMPROVEMENT: Use EFFECT_CLICK for better keyboard feel
+                v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                v.vibrate(VibrationEffect.createOneShot(12, 40))
+                // Stronger vibration for older devices (15ms, amplitude 100)
+                v.vibrate(VibrationEffect.createOneShot(15, 100))
             } else {
                 @Suppress("DEPRECATION")
-                v.vibrate(12)
+                v.vibrate(15)  // Slightly longer vibration
             }
         } else {
             view.performHapticFeedback(

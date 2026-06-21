@@ -1,0 +1,55 @@
+{
+  "id": "chinese",
+  "label": "中文",
+  "rows": [
+    {
+      "keys": [
+        { "label": "Q", "output": "q", "widthWeight": 1 },
+        { "label": "W", "output": "w", "widthWeight": 1 },
+        { "label": "E", "output": "e", "widthWeight": 1 },
+        { "label": "R", "output": "r", "widthWeight": 1 },
+        { "label": "T", "output": "t", "widthWeight": 1 },
+        { "label": "Y", "output": "y", "widthWeight": 1 },
+        { "label": "U", "output": "u", "widthWeight": 1 },
+        { "label": "I", "output": "i", "widthWeight": 1 },
+        { "label": "O", "output": "o", "widthWeight": 1 },
+        { "label": "P", "output": "p", "widthWeight": 1 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "A", "output": "a", "widthWeight": 1 },
+        { "label": "S", "output": "s", "widthWeight": 1 },
+        { "label": "D", "output": "d", "widthWeight": 1 },
+        { "label": "F", "output": "f", "widthWeight": 1 },
+        { "label": "G", "output": "g", "widthWeight": 1 },
+        { "label": "H", "output": "h", "widthWeight": 1 },
+        { "label": "J", "output": "j", "widthWeight": 1 },
+        { "label": "K", "output": "k", "widthWeight": 1 },
+        { "label": "L", "output": "l", "widthWeight": 1 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "Shift", "type": "MODIFIER", "modifier": "SHIFT", "widthWeight": 1.5 },
+        { "label": "Z", "output": "z", "widthWeight": 1 },
+        { "label": "X", "output": "x", "widthWeight": 1 },
+        { "label": "C", "output": "c", "widthWeight": 1 },
+        { "label": "V", "output": "v", "widthWeight": 1 },
+        { "label": "B", "output": "b", "widthWeight": 1 },
+        { "label": "N", "output": "n", "widthWeight": 1 },
+        { "label": "M", "output": "m", "widthWeight": 1 },
+        { "label": "Bksp", "keyCode": 67, "type": "KEYCODE", "repeatable": true, "widthWeight": 1.5 }
+      ]
+    },
+    {
+      "keys": [
+        { "label": "123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1.2 },
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1 },
+        { "label": "Space", "output": " ", "widthWeight": 4 },
+        { "label": ".", "output": ".", "widthWeight": 1 },
+        { "label": "Enter", "keyCode": 66, "type": "KEYCODE", "widthWeight": 1.2 }
+      ]
+    }
+  ]
+}

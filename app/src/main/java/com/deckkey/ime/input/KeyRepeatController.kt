@@ -3,6 +3,11 @@ package com.deckkey.ime.input
 import android.os.Handler
 import android.os.Looper
 import com.deckkey.core.model.Key
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Windows-style key auto-repeat for held keys (arrows, backspace, space).
@@ -14,35 +19,42 @@ import com.deckkey.core.model.Key
  *
  * The very first emission happens immediately on press (handled by the caller);
  * this controller schedules every emission *after* that.
+ *
+ * FIX: Uses Coroutines instead of Handler to prevent memory leaks.
  */
 class KeyRepeatController(
     private val onRepeat: (Key) -> Unit,
 ) {
-    private val handler = Handler(Looper.getMainLooper())
     private var activeKey: Key? = null
+    private var repeatJob: Job? = null
+    private val scope = CoroutineScope(Dispatchers.Main)
 
     var initialDelayMs: Long = 400
     var intervalMs: Long = 45
-
-    private val tick = object : Runnable {
-        override fun run() {
-            val k = activeKey ?: return
-            onRepeat(k)
-            handler.postDelayed(this, intervalMs)
-        }
-    }
 
     /** Begin repeating [key] if it is repeatable. */
     fun start(key: Key) {
         if (!key.repeatable) return
         stop()
         activeKey = key
-        handler.postDelayed(tick, initialDelayMs)
+        repeatJob = scope.launch {
+            delay(initialDelayMs)
+            while (activeKey == key) {
+                onRepeat(key)
+                delay(intervalMs)
+            }
+        }
     }
 
     /** Stop any active repeat. Safe to call when nothing is repeating. */
     fun stop() {
         activeKey = null
-        handler.removeCallbacks(tick)
+        repeatJob?.cancel()
+        repeatJob = null
+    }
+
+    /** Cleanup on service destroy. */
+    fun destroy() {
+        stop()
     }
 }

@@ -1,5 +1,6 @@
 package com.deckkey.ime.input
 
+import android.util.Log
 import android.view.KeyCharacterMap
 import android.view.KeyEvent
 import android.view.inputmethod.InputConnection
@@ -61,9 +62,14 @@ class KeyDispatcher(
         if (ctrl || alt || meta) {
             if (key.keyCode != 0) {
                 sendKeyCode(ic, key.keyCode)
+            } else if (key.baseOutput.isNotEmpty()) {
+                // FIX: Validate baseOutput is not empty before sending
+                sendChar(ic, key.baseOutput.first())
             } else {
-                // Symbol with no keycode but a command modifier: best-effort via events.
-                key.baseOutput.firstOrNull()?.let { sendChar(ic, it) }
+                // FIX: Log warning for debug when no output available
+                Log.w("DeckKey", "No output for key '${key.label}' with modifiers (ctrl=$ctrl, alt=$alt, meta=$meta)")
+                // Fallback: try to commit the label
+                ic.commitText(key.label, 1)
             }
             return
         }

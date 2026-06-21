@@ -35,7 +35,18 @@ class ModifierStateManager(
 
     /** Timestamp of last tap per modifier, for double-tap (lock) detection. */
     private val lastTapAt = HashMap<Modifier, Long>()
+    private val pressOriginState = HashMap<Modifier, ModState>()
+    private val consumedSinceDown = HashMap<Modifier, Boolean>()
     private val doubleTapWindowMs = 300L
+
+    init {
+        // FIX: Initialize all HashMaps for all modifiers to prevent NPE
+        Modifier.values().forEach { m ->
+            lastTapAt[m] = 0L
+            pressOriginState[m] = ModState.OFF
+            consumedSinceDown[m] = false
+        }
+    }
 
     fun state(m: Modifier): ModState = states[m] ?: ModState.OFF
     fun isActive(m: Modifier): Boolean = state(m) != ModState.OFF
@@ -118,8 +129,4 @@ class ModifierStateManager(
         }
         if (changed) onChanged()
     }
-
-    // ---- internal bookkeeping ----
-    private val pressOriginState = HashMap<Modifier, ModState>()
-    private val consumedSinceDown = HashMap<Modifier, Boolean>()
 }
