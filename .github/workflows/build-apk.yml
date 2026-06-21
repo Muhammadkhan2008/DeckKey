@@ -22,10 +22,21 @@ jobs:
         cache: gradle
 
     - name: Make gradlew executable
-      run: chmod +x gradlew
+      run: chmod +x gradlew gradlew.bat
+
+    - name: Setup Gradle Wrapper
+      run: |
+        if [ ! -f gradle/wrapper/gradle-wrapper.jar ] || [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
+          echo "Fixing gradle wrapper..."
+          mkdir -p gradle/wrapper
+          cd gradle/wrapper
+          curl -L -o gradle-wrapper.jar https://services.gradle.org/distributions/gradle-8.7-wrapper.jar 2>/dev/null || wget -q -O gradle-wrapper.jar https://services.gradle.org/distributions/gradle-8.7-wrapper.jar || echo "Warning: Gradle wrapper download failed"
+          cd ../../
+        fi
+        ls -lh gradle/wrapper/gradle-wrapper.jar
 
     - name: Build Debug APK
-      run: ./gradlew assembleDebug
+      run: ./gradlew assembleDebug --stacktrace --info
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v3
