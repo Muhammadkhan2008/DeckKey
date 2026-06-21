@@ -46,6 +46,7 @@ class KeyboardView @JvmOverloads constructor(
         fun onModifierUp(modifier: Modifier)
         fun onRepeatStart(key: Key)
         fun onRepeatStop()
+        fun onSpaceDrag(steps: Int)
     }
 
     var listener: Listener? = null
@@ -64,6 +65,11 @@ class KeyboardView @JvmOverloads constructor(
 
     /** pointerId -> the key that pointer is currently pressing. */
     private val activePointers = HashMap<Int, PositionedKey>()
+
+    private var spacePointerId: Int = -1
+    private var spaceDragStartX: Float = 0f
+    private var isSpaceDragging: Boolean = false
+    private val spaceDragThreshold: Float get() = dp(12f)
 
     // IMPROVEMENT: Slightly larger gap for thumb-friendly spacing
     private val gap = dp(4f)
@@ -334,6 +340,13 @@ class KeyboardView @JvmOverloads constructor(
         val pk = hitTest(x, y) ?: return
         activePointers[pointerId] = pk
         val key = pk.key
+
+        if (key.keyCode == 62 || key.label.equals("space", ignoreCase = true) || key.baseOutput == " ") {
+            spacePointerId = pointerId
+            spaceDragStartX = x
+            isSpaceDragging = false
+        }
+
         if (key.type == KeyType.MODIFIER && key.modifier != null) {
             listener?.onModifierDown(key.modifier)
         } else {
@@ -352,6 +365,25 @@ class KeyboardView @JvmOverloads constructor(
     private fun handleMove(pointerId: Int, x: Float, y: Float) {
         val current = activePointers[pointerId] ?: return
         val b = current.bounds
+
+        if (pointerId == spacePointerId) {
+            val dx = x - spaceDragStartX
+            val threshold = spaceDragThreshold
+            if (isSpaceDragging || Math.abs(dx) > threshold) {
+                if (!isSpaceDragging) {
+                    isSpaceDragging = true
+                    listener?.onRepeatStop()
+                    preview.dismiss()
+                }
+                val steps = (dx / threshold).toInt()
+                if (steps != 0) {
+                    spaceDragStartX += steps * threshold
+                    listener?.onSpaceDrag(steps)
+                }
+                return
+            }
+        }
+
         // Still within the key (plus slop tolerance)? Keep the press alive — this
         // stops natural finger jitter from cancelling a tap.
         val isWithinSlop = x >= b.left - touchSlop && x <= b.right + touchSlop &&
@@ -383,6 +415,17 @@ class KeyboardView @JvmOverloads constructor(
     private fun handleUp(pointerId: Int) {
         val pk = activePointers.remove(pointerId) ?: return
         val key = pk.key
+
+        if (pointerId == spacePointerId) {
+            spacePointerId = -1
+            if (isSpaceDragging) {
+                isSpaceDragging = false
+                if (shouldPreview(key)) preview.dismiss()
+                invalidate()
+                return
+            }
+        }
+
         when {
             key.type == KeyType.MODIFIER && key.modifier != null ->
                 listener?.onModifierUp(key.modifier)
@@ -401,6 +444,12 @@ class KeyboardView @JvmOverloads constructor(
 
     private fun cancelPointer(pointerId: Int) {
         val pk = activePointers.remove(pointerId) ?: return
+
+        if (pointerId == spacePointerId) {
+            spacePointerId = -1
+            isSpaceDragging = false
+        }
+
         if (pk.key.repeatable) listener?.onRepeatStop()
         preview.dismiss()
         invalidate()

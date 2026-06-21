@@ -9,6 +9,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.deckkey.core.model.Key
+import com.deckkey.core.model.KeyType
+import com.deckkey.core.model.KeyboardLayout
+import com.deckkey.core.model.Row
 import com.deckkey.core.model.Modifier
 import com.deckkey.core.prefs.Settings
 import com.deckkey.core.prefs.SettingsRepository
@@ -49,6 +52,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     private var keyboardView: KeyboardView? = null
     private var currentLayoutId: String = "qwerty"
     private var settings: Settings = Settings.DEFAULT
+    private val clipboardHistory = ArrayList<String>()
 
     override fun onCreate() {
         super.onCreate()
@@ -95,6 +99,24 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         modifiers.resetTransient()
         repeat.stop()
         keyboardView?.refreshModifierVisuals()
+
+        // Capture clipboard item
+        try {
+            val clipboard = getSystemService(CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+            clipboard?.primaryClip?.let { clip ->
+                if (clip.itemCount > 0) {
+                    val text = clip.getItemAt(0).text?.toString()
+                    if (!text.isNullOrBlank() && !clipboardHistory.contains(text)) {
+                        clipboardHistory.add(0, text)
+                        if (clipboardHistory.size > 5) {
+                            clipboardHistory.removeAt(5)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("DeckKey", "Failed to access clipboard", e)
+        }
     }
 
     override fun onFinishInput() {
@@ -161,7 +183,11 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
             id
         }
         currentLayoutId = nextId
-        keyboardView?.setLayout(layouts.load(nextId))
+        if (nextId == "clipboard") {
+            keyboardView?.setLayout(getClipboardLayout())
+        } else {
+            keyboardView?.setLayout(layouts.load(nextId))
+        }
     }
 
     private fun getNextLanguageId(current: String): String {
@@ -202,6 +228,11 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     override fun onKeyTap(key: Key) {
+        if (key.output == "__CLEAR_CLIPBOARD__") {
+            clipboardHistory.clear()
+            switchLayout("clipboard")
+            return
+        }
         dispatcher.dispatch(key, currentInputConnection)
     }
 
@@ -225,6 +256,49 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     private fun onRepeatTick(key: Key) {
         // Re-dispatch the held key (arrows, backspace, space) at the repeat interval.
         dispatcher.dispatch(key, currentInputConnection)
+    }
+
+    override fun onSpaceDrag(steps: Int) {
+        val ic = currentInputConnection ?: return
+        val keyCode = if (steps < 0) android.view.KeyEvent.KEYCODE_DPAD_LEFT else android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+        val absSteps = Math.abs(steps)
+        val now = System.currentTimeMillis()
+        for (i in 0 until absSteps) {
+            ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCode, 0, 0))
+            ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCode, 0, 0))
+        }
+    }
+
+    private fun getClipboardLayout(): KeyboardLayout {
+        val rows = ArrayList<Row>()
+
+        // Row 1: Header/Navigation
+        val headerKeys = listOf(
+            Key(label = "← Back", type = KeyType.LAYOUT_SWITCH, switchTo = "qwerty", widthWeight = 2f),
+            Key(label = "Clipboard History", type = KeyType.CHAR, output = "", widthWeight = 4f),
+            Key(label = "Clear", type = KeyType.CHAR, output = "__CLEAR_CLIPBOARD__", widthWeight = 2f)
+        )
+        rows.add(Row(keys = headerKeys, heightWeight = 0.8f))
+
+        // Rows 2+: Clipboard items
+        if (clipboardHistory.isEmpty()) {
+            rows.add(Row(keys = listOf(
+                Key(label = "(Clipboard is empty)", type = KeyType.CHAR, output = "", widthWeight = 1f)
+            )))
+        } else {
+            for (item in clipboardHistory.take(4)) {
+                val displayLabel = if (item.length > 30) item.take(28) + "..." else item
+                rows.add(Row(keys = listOf(
+                    Key(label = displayLabel, type = KeyType.CHAR, output = item, widthWeight = 1f)
+                )))
+            }
+        }
+
+        return KeyboardLayout(
+            id = "clipboard",
+            label = "Clipboard",
+            rows = rows
+        )
     }
 
     private fun showPowerMenuDialog() {

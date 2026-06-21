@@ -69,14 +69,137 @@ class KeyDispatcher(
     }
 
     private fun handleSpace(ic: InputConnection) {
+        val expanded = checkAndExpandMacros(ic)
         val now = System.currentTimeMillis()
-        if (now - lastSpaceTime < 300L) {
-            ic.deleteSurroundingText(1, 0)
-            ic.commitText(". ", 1)
+        if (expanded) {
+            ic.commitText(" ", 1)
             lastSpaceTime = 0L
         } else {
-            ic.commitText(" ", 1)
-            lastSpaceTime = now
+            if (now - lastSpaceTime < 300L) {
+                ic.deleteSurroundingText(1, 0)
+                ic.commitText(". ", 1)
+                lastSpaceTime = 0L
+            } else {
+                ic.commitText(" ", 1)
+                lastSpaceTime = now
+            }
+        }
+    }
+
+    private fun checkAndExpandMacros(ic: InputConnection): Boolean {
+        val before = ic.getTextBeforeCursor(30, 0)?.toString() ?: return false
+        if (before.isEmpty()) return false
+
+        val lastWordMatch = Regex("([a-zA-Z0-9]+)$").find(before) ?: return false
+        val lastWord = lastWordMatch.value
+
+        val macroMap = mapOf(
+            "brb" to "Be right back!",
+            "shrug" to "¯\\_(ツ)_/¯",
+            "omw" to "On my way!",
+            "ty" to "Thank you!",
+            "idk" to "I don't know",
+            "np" to "No problem!",
+            "gm" to "Good morning!",
+            "gn" to "Good night!"
+        )
+
+        val expansion = macroMap[lastWord.lowercase()]
+        if (expansion != null) {
+            ic.deleteSurroundingText(lastWord.length, 0)
+            ic.commitText(expansion, 1)
+            return true
+        }
+        return false
+    }
+
+    private fun checkAndEvaluateMath(ic: InputConnection): Boolean {
+        val before = ic.getTextBeforeCursor(40, 0)?.toString() ?: return false
+        if (before.isEmpty()) return false
+
+        val matchResult = Regex("([0-9+\\-*/().\\s]+)$").find(before) ?: return false
+        val expr = matchResult.value.trim()
+        if (expr.isEmpty() || !expr.any { it in listOf('+', '-', '*', '/') }) return false
+
+        val result = evaluateMath(expr) ?: return false
+
+        val formattedResult = if (result % 1.0 == 0.0) {
+            result.toLong().toString()
+        } else {
+            String.format(java.util.Locale.US, "%.4f", result).trimEnd('0').trimEnd('.')
+        }
+
+        ic.deleteSurroundingText(matchResult.value.length, 0)
+        ic.commitText(formattedResult, 1)
+        return true
+    }
+
+    private fun evaluateMath(expr: String): Double? {
+        val clean = expr.replace("\\s".toRegex(), "")
+        if (!clean.matches(Regex("[0-9+\\-*/().]+"))) return null
+        return try {
+            object : Any() {
+                var pos = -1
+                var ch = 0
+
+                fun nextChar() {
+                    ch = if (++pos < clean.length) clean[pos].code else -1
+                }
+
+                fun eat(charToEat: Int): Boolean {
+                    while (ch == ' '.code) nextChar()
+                    if (ch == charToEat) {
+                        nextChar()
+                        return true
+                    }
+                    return false
+                }
+
+                fun parse(): Double {
+                    nextChar()
+                    val x = parseExpression()
+                    if (pos < clean.length) throw RuntimeException("Unexpected: " + ch.toChar())
+                    return x
+                }
+
+                fun parseExpression(): Double {
+                    var x = parseTerm()
+                    while (true) {
+                        if (eat('+'.code)) x += parseTerm()
+                        else if (eat('-'.code)) x -= parseTerm()
+                        else return x
+                    }
+                }
+
+                fun parseTerm(): Double {
+                    var x = parseFactor()
+                    while (true) {
+                        if (eat('*'.code)) x *= parseFactor()
+                        else if (eat('/'.code)) x /= parseFactor()
+                        else return x
+                    }
+                }
+
+                fun parseFactor(): Double {
+                    if (eat('+'.code)) return parseFactor()
+                    if (eat('-'.code)) return -parseFactor()
+
+                    var x: Double
+                    val startPos = this.pos
+                    if (eat('('.code)) {
+                        x = parseExpression()
+                        eat(')'.code)
+                    } else if ((ch >= '0'.code && ch <= '9'.code) || ch == '.'.code) {
+                        while ((ch >= '0'.code && ch <= '9'.code) || ch == '.'.code) nextChar()
+                        x = clean.substring(startPos, this.pos).toDouble()
+                    } else {
+                        throw RuntimeException("Unexpected: " + ch.toChar())
+                    }
+                    return x
+                }
+            }.parse()
+        } catch (e: Exception) {
+            null
         }
     }
 
@@ -106,6 +229,12 @@ class KeyDispatcher(
         if (key.baseOutput == " ") {
             handleSpace(ic)
             return
+        }
+
+        if (key.baseOutput == "=") {
+            if (checkAndEvaluateMath(ic)) {
+                return
+            }
         }
 
         val text = resolveText(key, shift)

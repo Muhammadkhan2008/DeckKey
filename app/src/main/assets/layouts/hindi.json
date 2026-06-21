@@ -44,12 +44,12 @@
     },
     {
       "keys": [
-        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 1.0 },
-        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 1.0 },
-        { "label": "🌐", "type": "LAYOUT_SWITCH", "switchTo": "next_lang", "widthWeight": 1.0 },
-        { "label": "स", "output": " ", "widthWeight": 3.8 },
-        { "label": "।", "output": "।", "widthWeight": 1.0 },
-        { "label": "Enter", "keyCode": 66, "type": "KEYCODE", "widthWeight": 1.0 }
+        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 0.8 },
+        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 0.8 },
+        { "label": "🌐", "type": "LAYOUT_SWITCH", "switchTo": "next_lang", "widthWeight": 0.8 },
+        { "label": "स", "output": " ", "widthWeight": 5.4 },
+        { "label": "।", "output": "।", "widthWeight": 0.8 },
+        { "label": "Enter", "keyCode": 66, "type": "KEYCODE", "widthWeight": 1.2 }
       ]
     }
   ]

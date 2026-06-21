@@ -86,7 +86,7 @@ class SpeechInputController(
                 ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 ?.firstOrNull()
                 .orEmpty()
-            val processed = convertWordsToNumbers(best)
+            val processed = processVoiceText(best)
             commit(if (processed.isNotBlank()) "$processed " else "")
             stop()
         }
@@ -116,8 +116,11 @@ class SpeechInputController(
         else -> "Speech error ($code)"
     }
 
-    private fun convertWordsToNumbers(text: String): String {
-        var result = text
+    private fun processVoiceText(text: String): String {
+        if (text.isBlank()) return ""
+        var result = text.trim()
+
+        // 1. Number word translation (English, Hindi, Urdu, Romanized)
         val numberMap = mapOf(
             "zero" to "0", "one" to "1", "two" to "2", "three" to "3", "four" to "4",
             "five" to "5", "six" to "6", "seven" to "7", "eight" to "8", "nine" to "9",
@@ -130,6 +133,39 @@ class SpeechInputController(
             val regex = "\\b$word\\b".toRegex(RegexOption.IGNORE_CASE)
             result = result.replace(regex, digit)
         }
+
+        // 2. Advanced Punctuation Voice Commands (English + Urdu/Hindi)
+        val commands = mapOf(
+            "period" to ".", "full stop" to ".", "comma" to ",", 
+            "question mark" to "?", "exclamation mark" to "!", 
+            "new line" to "\n", "next line" to "\n", "space" to " ",
+            "khatma" to "۔", "khatmah" to "۔", 
+            "purna viram" to "।", "pooran viram" to "।",
+            "sawaal" to "؟", "sawal" to "؟",
+            "sakta" to "،", "saktah" to "،"
+        )
+        for ((phrase, replacement) in commands) {
+            val regex = "\\b$phrase\\b".toRegex(RegexOption.IGNORE_CASE)
+            result = result.replace(regex, replacement)
+        }
+
+        // 3. Auto-capitalize pronoun "I" and contractions
+        result = result.replace(Regex("\\bi\\b"), "I")
+        result = result.replace(Regex("\\bi'm\\b", RegexOption.IGNORE_CASE), "I'm")
+        result = result.replace(Regex("\\bi am\\b", RegexOption.IGNORE_CASE), "I am")
+
+        // 4. Smart Capitalization: Capitalize the first letter of each sentence
+        if (result.isNotEmpty()) {
+            val sentences = result.split(Regex("(?<=[.!?।۔])\\s+"))
+            result = sentences.joinToString(" ") { s ->
+                if (s.isNotEmpty()) {
+                    s[0].uppercaseChar() + s.substring(1)
+                } else {
+                    ""
+                }
+            }
+        }
+
         return result
     }
 }
