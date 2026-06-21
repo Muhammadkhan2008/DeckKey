@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeckKey PRO Code Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1e1f22;
+            color: #e8e8e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #2b2d31;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            width: 400px;
+            text-align: center;
+        }
+        h2 {
+            color: #3d6ef5;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #15161a;
+            border-radius: 6px;
+            background: #1e1f22;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+        }
+        button {
+            width: 95%;
+            padding: 12px;
+            background: #3d6ef5;
+            color: #white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #2c58cc;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #1e1f22;
+            border-radius: 6px;
+            border: 1px dashed #3d6ef5;
+            display: none;
+        }
+        .code {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3d6ef5;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>DeckKey PRO Activation Code Generator</h2>
+    <p style="font-size: 13px; color: #9aa0a6;">Enter the customer's Device ID to generate their unique lifetime PRO activation code.</p>
+    
+    <input type="text" id="deviceId" placeholder="Enter Device ID (e.g. 8a7f92b0c13e4f)" />
+    <button onclick="generateCode()">Generate Code</button>
+
+    <div class="result" id="resultBox">
+        <div style="font-size: 12px; color: #9aa0a6; margin-bottom: 5px;">ACTIVATION CODE:</div>
+        <div class="code" id="activationCode">-</div>
+    </div>
+</div>
+
+<script>
+    async function generateCode() {
+        const deviceId = document.getElementById('deviceId').value.trim();
+        if (!deviceId) {
+            alert('Please enter a Device ID');
+            return;
+        }
+        const salt = "DECKKEY-PRO-SALT";
+        const text = deviceId + salt;
+        
+        // Compute SHA-256 Hash using Web Crypto API
+        const encoder = new TextEncoder();
+        const data = encoder.encode(text);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        
+        // Convert to Hex
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        
+        // Take first 4 bytes (8 hex chars)
+        const hexCode = hashArray.slice(0, 4).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join('');
+        
+        document.getElementById('activationCode').innerText = hexCode;
+        document.getElementById('resultBox').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

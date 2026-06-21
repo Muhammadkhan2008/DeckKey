@@ -29,6 +29,7 @@ class SettingsRepository(private val context: Context) {
         val THEME_ID = stringPreferencesKey("theme_id")
         val BACKGROUND_URI = stringPreferencesKey("background_uri")
         val BACKGROUND_DIM = intPreferencesKey("background_dim")
+        val IS_PRO = booleanPreferencesKey("is_pro")
     }
 
     private fun read(p: Preferences): Settings = Settings(
@@ -44,6 +45,7 @@ class SettingsRepository(private val context: Context) {
         themeId = p[Keys.THEME_ID] ?: Settings.DEFAULT.themeId,
         backgroundUri = p[Keys.BACKGROUND_URI] ?: Settings.DEFAULT.backgroundUri,
         backgroundDim = p[Keys.BACKGROUND_DIM] ?: Settings.DEFAULT.backgroundDim,
+        isPro = p[Keys.IS_PRO] ?: Settings.DEFAULT.isPro,
     )
 
     val settings: Flow<Settings> = context.dataStore.data.map { read(it) }
@@ -61,6 +63,7 @@ class SettingsRepository(private val context: Context) {
             p[Keys.THEME_ID] = next.themeId
             p[Keys.BACKGROUND_URI] = next.backgroundUri
             p[Keys.BACKGROUND_DIM] = next.backgroundDim
+            p[Keys.IS_PRO] = next.isPro
         }
     }
 }

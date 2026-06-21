@@ -87,6 +87,85 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+        <!-- PRO Upgrade Card -->
+        <LinearLayout
+            android:id="@+id/cardProActivation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@color/key_normal"
+            android:padding="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/lblProTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DeckKey PRO Plan"
+                android:textColor="@color/accent"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lblProStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Status: LITE (Free Plan)"
+                android:textColor="@color/key_text"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/lblProDesc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Unlock Urdu/Chinese layout switching, custom backgrounds, and advanced customizations. Pay manually to 03163347485 and enter code."
+                android:textColor="@color/key_text_dim"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/lblDeviceId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Your Device ID: [Fetching...]"
+                android:textColor="@color/key_text"
+                android:textIsSelectable="true"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:id="@+id/layoutActivationBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/txtActivationCode"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.5"
+                    android:hint="Enter activation code"
+                    android:textColor="@color/key_text"
+                    android:textColorHint="@color/key_text_dim"
+                    android:inputType="textCapCharacters"
+                    android:textSize="13sp" />
+
+                <Button
+                    android:id="@+id/btnActivatePro"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.0"
+                    android:layout_marginStart="8dp"
+                    android:text="Activate"
+                    android:textSize="12sp" />
+
+            </LinearLayout>
+        </LinearLayout>
+
         <CheckBox
             android:id="@+id/cbHaptics"
             android:layout_width="match_parent"

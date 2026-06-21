@@ -38,9 +38,15 @@ class MainActivity : AppCompatActivity() {
             ).show()
         }
 
+    private var isPro: Boolean = false
+
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
             uri ?: return@registerForActivityResult
+            if (!isPro) {
+                Toast.makeText(this, "Custom background is a PRO feature. Please upgrade!", Toast.LENGTH_LONG).show()
+                return@registerForActivityResult
+            }
             val localPath = saveUriToInternalStorage(uri)
             if (localPath != null) {
                 save { it.copy(backgroundUri = localPath) }
@@ -55,6 +61,21 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         repo = SettingsRepository(applicationContext)
+
+        val deviceId = android.provider.Settings.Secure.getString(contentResolver, android.provider.Settings.Secure.ANDROID_ID) ?: "DECKKEY-DEVICE"
+        binding.lblDeviceId.text = "Your Device ID: $deviceId"
+
+        binding.btnActivatePro.setOnClickListener {
+            val codeEntered = binding.txtActivationCode.text.toString().trim().uppercase()
+            val expectedCode = generateActivationCode(deviceId)
+            if (codeEntered == expectedCode) {
+                save { it.copy(isPro = true) }
+                Toast.makeText(this, "PRO PLAN ACTIVATED FOREVER! Thank you!", Toast.LENGTH_LONG).show()
+                binding.txtActivationCode.text.clear()
+            } else {
+                Toast.makeText(this, "Invalid Activation Code. Please try again.", Toast.LENGTH_SHORT).show()
+            }
+        }
 
         binding.btnEnable.setOnClickListener {
             startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
@@ -109,25 +130,38 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindSettings() {
         lifecycleScope.launch {
-            val s = repo.settings.first()
+            repo.settings.collect { s ->
+                isPro = s.isPro
+                if (isPro) {
+                    binding.lblProStatus.text = "Status: PRO (Activated) ✓"
+                    binding.lblProStatus.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.accent))
+                    binding.layoutActivationBox.visibility = View.GONE
+                    binding.lblProDesc.text = "Thank you for upgrading! All Pro features are unlocked."
+                } else {
+                    binding.lblProStatus.text = "Status: LITE (Free Plan)"
+                    binding.lblProStatus.setTextColor(android.graphics.Color.RED)
+                    binding.layoutActivationBox.visibility = View.VISIBLE
+                    binding.lblProDesc.text = "Unlock Urdu/Chinese layout switching, custom backgrounds, and advanced customizations. Pay manually to 03163347485 and enter code."
+                }
 
-            binding.cbHaptics.isChecked = s.haptics
-            binding.cbSound.isChecked = s.sound
-            binding.cbPopup.isChecked = s.previewPopup
+                binding.cbHaptics.isChecked = s.haptics
+                binding.cbSound.isChecked = s.sound
+                binding.cbPopup.isChecked = s.previewPopup
 
-            binding.seekKeyHeight.max = KbSettings.MAX_KEY_HEIGHT - KbSettings.MIN_KEY_HEIGHT
-            binding.seekKeyHeight.progress = s.keyHeightDp - KbSettings.MIN_KEY_HEIGHT
-            binding.lblKeyHeight.text = getString(R.string.pref_key_height) + ": ${s.keyHeightDp}"
+                binding.seekKeyHeight.max = KbSettings.MAX_KEY_HEIGHT - KbSettings.MIN_KEY_HEIGHT
+                binding.seekKeyHeight.progress = s.keyHeightDp - KbSettings.MIN_KEY_HEIGHT
+                binding.lblKeyHeight.text = getString(R.string.pref_key_height) + ": ${s.keyHeightDp}"
 
-            binding.seekRepeatInterval.max = KbSettings.MAX_REPEAT_INTERVAL - KbSettings.MIN_REPEAT_INTERVAL
-            binding.seekRepeatInterval.progress = s.repeatIntervalMs - KbSettings.MIN_REPEAT_INTERVAL
-            binding.lblRepeatInterval.text = getString(R.string.pref_repeat_interval) + ": ${s.repeatIntervalMs}"
+                binding.seekRepeatInterval.max = KbSettings.MAX_REPEAT_INTERVAL - KbSettings.MIN_REPEAT_INTERVAL
+                binding.seekRepeatInterval.progress = s.repeatIntervalMs - KbSettings.MIN_REPEAT_INTERVAL
+                binding.lblRepeatInterval.text = getString(R.string.pref_repeat_interval) + ": ${s.repeatIntervalMs}"
 
-            themeAdapter.setSelected(s.themeId)
+                themeAdapter.setSelected(s.themeId)
 
-            binding.seekBgDim.max = 100
-            binding.seekBgDim.progress = s.backgroundDim
-            binding.lblBgDim.text = getString(R.string.bg_dim_label, s.backgroundDim)
+                binding.seekBgDim.max = 100
+                binding.seekBgDim.progress = s.backgroundDim
+                binding.lblBgDim.text = getString(R.string.bg_dim_label, s.backgroundDim)
+            }
         }
 
         binding.cbHaptics.setOnCheckedChangeListener { _, v -> save { it.copy(haptics = v) } }
@@ -186,5 +220,13 @@ class MainActivity : AppCompatActivity() {
             android.util.Log.e("MainActivity", "Failed to save image to internal storage", e)
             null
         }
+    }
+
+    private fun generateActivationCode(deviceId: String): String {
+        val salt = "DECKKEY-PRO-SALT"
+        val bytes = (deviceId + salt).toByteArray()
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        val digest = md.digest(bytes)
+        return digest.take(4).joinToString("") { "%02X".format(it) }
     }
 }
