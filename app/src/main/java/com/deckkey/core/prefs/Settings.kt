@@ -22,7 +22,7 @@ data class Settings(
     val backgroundUri: String = "",
     /** 0..100 dim applied over the background image so labels stay readable. */
     val backgroundDim: Int = 45,
-    val isPro: Boolean = false,
+    val isPro: Boolean = true, // Developer build - PRO enabled by default
 ) {
     companion object {
         val DEFAULT = Settings()
