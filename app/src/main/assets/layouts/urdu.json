@@ -4,52 +4,49 @@
   "rows": [
     {
       "keys": [
-        { "label": "ق", "output": "ق" },
-        { "label": "و", "output": "و" },
-        { "label": "ع", "output": "ع" },
-        { "label": "ر", "output": "ر" },
-        { "label": "ت", "output": "ت" },
-        { "label": "ے", "output": "ے" },
-        { "label": "ء", "output": "ء" },
-        { "label": "ی", "output": "ی" },
-        { "label": "ہ", "output": "ہ" },
-        { "label": "پ", "output": "پ" }
+        { "label": "ق", "output": "ق", "widthWeight": 1 },
+        { "label": "و", "output": "و", "widthWeight": 1 },
+        { "label": "ع", "output": "ع", "widthWeight": 1 },
+        { "label": "ر", "output": "ر", "widthWeight": 1 },
+        { "label": "ت", "output": "ت", "widthWeight": 1 },
+        { "label": "ے", "output": "ے", "widthWeight": 1 },
+        { "label": "ء", "output": "ء", "widthWeight": 1 },
+        { "label": "ا", "output": "ا", "widthWeight": 1 },
+        { "label": "و", "output": "و", "widthWeight": 1 },
+        { "label": "پ", "output": "پ", "widthWeight": 1 }
       ]
     },
     {
       "keys": [
-        { "label": "ا", "output": "ا" },
-        { "label": "س", "output": "س" },
-        { "label": "د", "output": "د" },
-        { "label": "ف", "output": "ف" },
-        { "label": "گ", "output": "گ" },
-        { "label": "ح", "output": "ح" },
-        { "label": "ج", "output": "ج" },
-        { "label": "ک", "output": "ک" },
-        { "label": "ل", "output": "ل" }
+        { "label": "ا", "output": "ا", "widthWeight": 1 },
+        { "label": "س", "output": "س", "widthWeight": 1 },
+        { "label": "د", "output": "د", "widthWeight": 1 },
+        { "label": "ف", "output": "ف", "widthWeight": 1 },
+        { "label": "گ", "output": "گ", "widthWeight": 1 },
+        { "label": "ہ", "output": "ہ", "widthWeight": 1 },
+        { "label": "ج", "output": "ج", "widthWeight": 1 },
+        { "label": "ک", "output": "ک", "widthWeight": 1 },
+        { "label": "ل", "output": "ل", "widthWeight": 1 }
       ]
     },
     {
       "keys": [
-        { "label": "Shift", "type": "MODIFIER", "modifier": "SHIFT", "widthWeight": 1.5 },
-        { "label": "ز", "output": "ز" },
-        { "label": "خ", "output": "خ" },
-        { "label": "چ", "output": "چ" },
-        { "label": "ط", "output": "ط" },
-        { "label": "ش", "output": "ش" },
-        { "label": "ن", "output": "ن" },
-        { "label": "م", "output": "م" },
-        { "label": "Bksp", "keyCode": 67, "type": "KEYCODE", "repeatable": true, "widthWeight": 1.5 }
+        { "label": "ز", "output": "ز", "widthWeight": 1 },
+        { "label": "ش", "output": "ش", "widthWeight": 1 },
+        { "label": "چ", "output": "چ", "widthWeight": 1 },
+        { "label": "ب", "output": "ب", "widthWeight": 1 },
+        { "label": "ن", "output": "ن", "widthWeight": 1 },
+        { "label": "م", "output": "م", "widthWeight": 1 },
+        { "label": "Bksp", "keyCode": 67, "type": "KEYCODE", "repeatable": true, "widthWeight": 2 }
       ]
     },
     {
       "keys": [
-        { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 0.8 },
-        { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 0.8 },
-        { "label": "🌐", "type": "LAYOUT_SWITCH", "switchTo": "next_lang", "widthWeight": 0.8 },
-        { "label": "Space", "output": " ", "widthWeight": 5.4 },
-        { "label": "۔", "output": "۔", "widthWeight": 0.8 },
-        { "label": "Enter", "keyCode": 66, "type": "KEYCODE", "widthWeight": 1.2 }
+        { "label": "🌐", "type": "LAYOUT_SWITCH", "switchTo": "next_lang", "widthWeight": 1 },
+        { "label": "?123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1 },
+        { "label": "Space", "output": " ", "widthWeight": 4 },
+        { "label": "۔", "output": "۔", "widthWeight": 1 },
+        { "label": "Enter", "keyCode": 66, "type": "KEYCODE", "widthWeight": 1 }
       ]
     }
   ]

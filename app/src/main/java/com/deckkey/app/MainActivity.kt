@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +19,6 @@ import com.deckkey.core.prefs.Settings as KbSettings
 import com.deckkey.core.prefs.SettingsRepository
 import com.deckkey.core.theme.Themes
 import com.deckkey.databinding.ActivityMainBinding
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {

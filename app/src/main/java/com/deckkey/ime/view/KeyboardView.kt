@@ -19,7 +19,6 @@ import com.deckkey.core.theme.Theme
 import com.deckkey.core.theme.Themes
 import com.deckkey.ime.input.ModState
 import com.deckkey.ime.input.ModifierStateManager
-import kotlin.math.max
 
 /**
  * Custom, Canvas-drawn keyboard surface tuned for low-latency multitouch.

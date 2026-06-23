@@ -2,7 +2,7 @@ name: Build DeckKey APK
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
 
@@ -12,78 +12,27 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
 
     - name: Make gradlew executable
-      run: chmod +x gradlew gradlew.bat
-
-    - name: Setup Gradle Wrapper
-      run: |
-        if [ ! -f gradle/wrapper/gradle-wrapper.jar ] || [ ! -s gradle/wrapper/gradle-wrapper.jar ]; then
-          echo "Fixing gradle wrapper..."
-          mkdir -p gradle/wrapper
-          cd gradle/wrapper
-          curl -L -o gradle-wrapper.jar https://services.gradle.org/distributions/gradle-8.7-wrapper.jar 2>/dev/null || wget -q -O gradle-wrapper.jar https://services.gradle.org/distributions/gradle-8.7-wrapper.jar || echo "Warning: Gradle wrapper download failed"
-          cd ../../
-        fi
-        ls -lh gradle/wrapper/gradle-wrapper.jar
+      run: chmod +x gradlew
 
     - name: Build Debug APK
-      run: ./gradlew assembleDebug --stacktrace --info
-
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: DeckKey-Debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-
-    - name: Build Release APK
-      run: ./gradlew assembleRelease --build-cache
-      continue-on-error: true
-
-    - name: Upload Release APK (if built)
-      uses: actions/upload-artifact@v3
-      with:
-        name: DeckKey-Release
-        path: app/build/outputs/apk/release/app-release-unsigned.apk
-      continue-on-error: true
-
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/create-release@v1
+      run: ./gradlew assembleDebug --stacktrace
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g"
+
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: ${{ github.ref }}
-        release_name: DeckKey ${{ github.ref }}
-        body: |
-          DeckKey - PC Keyboard for Android
-          
-          ### Features
-          - Real Ctrl, Alt, Shift, Meta, Caps Lock, Esc, F1-F12 keys
-          - Arrow keys and navigation cluster
-          - Desktop-feel touch handling
-          - Multi-touch chording support
-          - Auto-repeat for held keys
-          - Key preview popups
-          - Haptics and keyboard sound
-          
-          ### Languages Supported
-          - English (QWERTY)
-          - Hindi (हिंदी)
-          - Chinese (中文)
-          
-          ### Installation
-          1. Download app-debug.apk
-          2. Install: adb install -r app-debug.apk
-          3. Open DeckKey app
-          4. Enable in Settings
-          5. Choose DeckKey as keyboard
+        name: DeckKey-Debug-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
+        if-no-files-found: error
 

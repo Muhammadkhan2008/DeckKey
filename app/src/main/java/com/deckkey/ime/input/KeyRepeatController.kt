@@ -1,7 +1,5 @@
 package com.deckkey.ime.input
 
-import android.os.Handler
-import android.os.Looper
 import com.deckkey.core.model.Key
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -302,21 +302,8 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     private fun showPowerMenuDialog() {
-        val builder = android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-        builder.setTitle("DeckKey Power Options")
-        builder.setMessage("Select power action:")
-        builder.setPositiveButton("Power Off") { _, _ ->
-            Toast.makeText(this, "Shutting down... (Requires System Permissions/Root)", Toast.LENGTH_LONG).show()
-            try { Runtime.getRuntime().exec("reboot -p") } catch (_: Exception) {}
-        }
-        builder.setNegativeButton("Restart") { _, _ ->
-            Toast.makeText(this, "Restarting... (Requires System Permissions/Root)", Toast.LENGTH_LONG).show()
-            try { Runtime.getRuntime().exec("reboot") } catch (_: Exception) {}
-        }
-        builder.setNeutralButton("Cancel") { dialog, _ -> dialog.dismiss() }
-        val dialog = builder.create()
-        dialog.window?.setType(android.view.WindowManager.LayoutParams.TYPE_INPUT_METHOD)
-        dialog.show()
+        // IME services cannot show AlertDialogs directly - show a toast instead
+        Toast.makeText(this, "Power menu: Alt+F4 detected. Use device power button.", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
