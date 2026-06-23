@@ -32,9 +32,9 @@ class FeedbackController(context: Context) {
     /** Light tick on key-down. [view] is used for the system haptic fallback. */
     fun keyDown(view: View) {
         if (hapticsEnabled) vibrateTick(view)
-        // IMPROVEMENT: Use better keyboard sound effect with proper volume
+        // Use standard keypress sound effect (FX_KEY doesn't exist in Android SDK)
         if (soundEnabled) {
-            audio?.playSoundEffect(AudioManager.FX_KEY, 0.8f)  // Use FX_KEY for better click sound
+            audio?.playSoundEffect(AudioManager.FX_KEYPRESS_STANDARD, 0.8f)
         }
     }
 
