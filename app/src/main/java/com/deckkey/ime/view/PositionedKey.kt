@@ -7,4 +7,5 @@ import com.deckkey.core.model.Key
 data class PositionedKey(
     val key: Key,
     val bounds: RectF,
+    val helperLabel: String? = null,
 )

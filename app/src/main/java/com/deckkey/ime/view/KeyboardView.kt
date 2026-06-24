@@ -198,17 +198,34 @@ class KeyboardView @JvmOverloads constructor(
         val lay = layout ?: return
         val innerW = width - gap
         var y = gap
-        for (row in lay.rows) {
+        for ((rowIdx, row) in lay.rows.withIndex()) {
             val rowHeight = keyHeightPx * row.heightWeight
             val totalKeyWeight = row.keys.sumOf { it.widthWeight.toDouble() }.toFloat()
             // Available width for keys after subtracting inter-key gaps.
             val gapsWidth = gap * row.keys.size
             val usableW = innerW - gapsWidth
             var x = gap
-            for (key in row.keys) {
+            for ((keyIdx, key) in row.keys.withIndex()) {
                 val kw = usableW * (key.widthWeight / totalKeyWeight)
                 val rect = RectF(x, y, x + kw, y + rowHeight - gap)
-                positioned.add(PositionedKey(key, rect))
+                
+                var helper: String? = null
+                if (key.type == KeyType.CHAR) {
+                    if (lay.id == "urdu" && rowIdx in 0..2) {
+                        val qwertyRows = listOf(
+                            listOf("Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"),
+                            listOf("A", "S", "D", "F", "G", "H", "J", "K", "L"),
+                            listOf("Z", "X", "C", "V", "B", "N")
+                        )
+                        if (keyIdx < qwertyRows[rowIdx].size) {
+                            helper = qwertyRows[rowIdx][keyIdx]
+                        }
+                    } else if (lay.id == "hindi" || lay.id == "chinese") {
+                        helper = key.label
+                    }
+                }
+                
+                positioned.add(PositionedKey(key, rect, helper))
                 x += kw + gap
             }
             y += rowHeight
@@ -287,8 +304,8 @@ class KeyboardView @JvmOverloads constructor(
         canvas.drawText(label, cx, baseline, keyText)
 
         // hint (corner)
-        val cornerHint = if (showHelperLabels && layout?.id != "qwerty" && key.type == KeyType.CHAR) {
-            key.label
+        val cornerHint = if (showHelperLabels && pk.helperLabel != null) {
+            pk.helperLabel
         } else {
             key.hint
         }

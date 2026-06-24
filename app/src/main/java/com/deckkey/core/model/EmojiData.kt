@@ -15,7 +15,7 @@ object EmojiData {
 
     val animals = listOf(
         "🦁", "🐯", "🐱", "🐶", "🐻", "🐼", "🐨", "🐵", "🦊", "🐰", "🦅", "🦉", "🦎", "🐍", "🐬", "🌴",
-        "🐒", "🦍", "🦧", "🐕", "🐩", "🐺", "🦝", "🐈", " leopards", "🐴", "🦄", "🦓", "🦌", "🦬", "🐮", "🐂",
+        "🐒", "🦍", "🦧", "🐕", "🐩", "🐺", "🦝", "🐈", "🐆", "🐴", "🦄", "🦓", "🦌", "🦬", "🐮", "🐂",
         "🐃", "🐄", "🐷", "🐖", "🐗", "🐽", "🐏", "🐑", "🐐", "🐪", "🐫", "🦙", "🦒", "🐘", "🦣", "🦏",
         "🦛", "🐭", "🐁", "🐀", "🐹", "🐇", "🐿️", "🦫", "🦔", "🦇", "🦦", "🦨", "🦘", "🦡", "🦆", "🦢",
         "🦩", "🦜", "🕊️", "🐊", "🐢", "🐳", "🐋", "🦈", "🐙", "🦀", "🦞", "🦐", "🦑", "🐌", "🐛", "🐜",
@@ -32,7 +32,7 @@ object EmojiData {
     )
 
     val sports = listOf(
-        "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", " volleyball", "🏉", "🎱", "🏓", "🏓", "🏸", "🥅", "🏒", "🏑",
+        "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🎱", "🏓", "🏓", "🏸", "🥅", "🏒", "🏑",
         "🏏", "⛳", "🏹", "🎣", "🤿", "🥊", "🥋", "🛹", "🛷", "⛸️", "🎿", "🏆", "🥇", "🥈", "🥉", "🏅",
         "🎖️", "🎫", "🎟️", "🎪", "🤹", "🎭", "🎨", "🎬", "🎤", "🎧", "🎼", "🎹", "🥁", "🎸", "🎻", "🎲",
         "🎯", "🎳", "🎮", "👾", "🎰", "🧩", "♟️", "🎹", "🎸", "🎻", "🎷", "🎺", "🥁", "🪗", "🏹", "🤿"
@@ -135,13 +135,13 @@ object EmojiData {
             "🦄" to "Unicorn", "🦓" to "Zebra", "🦈" to "Shark", "🐙" to "Octopus",
             "🍎" to "Red Apple", "🍌" to "Banana", "🍇" to "Grapes", "🍓" to "Strawberry",
             "🍕" to "Pizza", "🍔" to "Hamburger", "🍟" to "French Fries", "🌭" to "Hot Dog",
-            "🍨" to "Ice Cream", "Cake" to "🍰", "☕" to "Hot Coffee", "🥤" to "Cup with Straw",
+            "🍨" to "Ice Cream", "🍰" to "Cake", "☕" to "Hot Coffee", "🥤" to "Cup with Straw",
             "🍺" to "Beer Mug", "🥂" to "Clinking Glasses", "🍿" to "Popcorn", "🍩" to "Doughnut",
             "⚽" to "Soccer Ball", "🏀" to "Basketball", "🏈" to "American Football", "⚾" to "Baseball",
             "🎾" to "Tennis Ball", "🎮" to "Game Controller", "🏆" to "Trophy",
             "🚗" to "Car", "🚑" to "Ambulance", "🚒" to "Fire Engine", "✈️" to "Airplane",
             "⛵" to "Sailboat", "🏠" to "House", "🏰" to "Castle", "🕌" to "Mosque", "🕋" to "Kaaba",
-            "💡" to "Light Bulb", "🔑" to "Key", " Door" to "Door", "🎁" to "Gift", "🎈" to "Balloon",
+            "💡" to "Light Bulb", "🔑" to "Key", "🚪" to "Door", "🎁" to "Gift", "🎈" to "Balloon",
             "🔒" to "Locked", "🔓" to "Unlocked", "🔨" to "Hammer", "🛡️" to "Shield", "💻" to "Laptop"
         )
         return map[emoji] ?: "Emoji"

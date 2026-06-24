@@ -127,7 +127,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
                 setTextColor(android.graphics.Color.parseColor("#e8e8e8"))
                 textSize = 14f
                 isClickable = true
-                isFocusable = true
+                isFocusable = false
                 setBackgroundResource(android.R.drawable.list_selector_background)
                 setOnClickListener {
                     onSuggestionClicked(this.text.toString())
@@ -391,7 +391,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     override fun onKeyLongPress(key: Key) {
-        if (currentLayoutId == "emoji" && isEmoji(key.label)) {
+        if (currentLayoutId == "emoji" && !key.output.isNullOrEmpty() && !key.output.startsWith("__EMOJI_CAT_")) {
             val name = EmojiData.getEmojiName(key.label)
             Toast.makeText(this, name, Toast.LENGTH_SHORT).show()
         }
@@ -675,11 +675,6 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         updateSuggestions()
     }
 
-    private fun isEmoji(s: String): Boolean {
-        if (s.isEmpty()) return false
-        val codePoint = s.codePointAt(0)
-        return codePoint in 0x1F300..0x1F9FF || codePoint in 0x2600..0x27BF || s.length > 2
-    }
 
     private fun showPowerMenuDialog() {
         Toast.makeText(this, "Power menu: Alt+F4 detected. Use device power button.", Toast.LENGTH_SHORT).show()
