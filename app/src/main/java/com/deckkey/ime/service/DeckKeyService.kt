@@ -13,6 +13,11 @@ import com.deckkey.core.model.KeyType
 import com.deckkey.core.model.KeyboardLayout
 import com.deckkey.core.model.Row
 import com.deckkey.core.model.Modifier
+import com.deckkey.core.model.EmojiData
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.view.ViewGroup
+import android.view.Gravity
 import com.deckkey.core.prefs.Settings
 import com.deckkey.core.prefs.SettingsRepository
 import com.deckkey.core.theme.Themes
@@ -51,8 +56,14 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
 
     private var keyboardView: KeyboardView? = null
     private var currentLayoutId: String = "qwerty"
+    private var lastTextLayoutId: String = "qwerty"
     private var settings: Settings = Settings.DEFAULT
     private val clipboardHistory = ArrayList<String>()
+
+    private lateinit var keyboardContainer: LinearLayout
+    private lateinit var suggestionBar: LinearLayout
+    private lateinit var suggestionTextViews: Array<TextView>
+    private var currentEmojiCategory = "smile"
 
     override fun onCreate() {
         super.onCreate()
@@ -72,6 +83,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
             onImeSwitch = { switchToNextIme() },
             onMic = { onMicTapped() },
             onAltF4 = { showPowerMenuDialog() },
+            onF1 = { openSettingsApp() },
         )
         settingsRepo = SettingsRepository(this)
         currentLayoutId = layouts.defaultLayoutId
@@ -82,15 +94,68 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     override fun onCreateInputView(): View {
-        val view = KeyboardView(this).apply {
+        val context = this
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setBackgroundColor(android.graphics.Color.parseColor("#1e1f22"))
+        }
+
+        // Create Suggestion Bar
+        suggestionBar = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                (40 * resources.displayMetrics.density).toInt()
+            )
+            setPadding(0, (4 * resources.displayMetrics.density).toInt(), 0, (4 * resources.displayMetrics.density).toInt())
+            setBackgroundColor(android.graphics.Color.parseColor("#15161a"))
+        }
+
+        // Add 3 suggestion text views
+        suggestionTextViews = Array(3) { index ->
+            TextView(context).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    1.0f
+                )
+                gravity = Gravity.CENTER
+                setTextColor(android.graphics.Color.parseColor("#e8e8e8"))
+                textSize = 14f
+                isClickable = true
+                isFocusable = true
+                setBackgroundResource(android.R.drawable.list_selector_background)
+                setOnClickListener {
+                    onSuggestionClicked(this.text.toString())
+                }
+            }
+        }
+
+        for (tv in suggestionTextViews) {
+            suggestionBar.addView(tv)
+        }
+
+        container.addView(suggestionBar)
+
+        val view = KeyboardView(context).apply {
             listener = this@DeckKeyService
             modifiers = this@DeckKeyService.modifiers
             previewEnabled = settings.previewPopup
+            showHelperLabels = settings.showHelperLabels
             keyHeightPx = settings.keyHeightDp * resources.displayMetrics.density
             setLayout(layouts.load(currentLayoutId))
         }
         keyboardView = view
-        return view
+        container.addView(view)
+
+        keyboardContainer = container
+        updateSuggestions()
+
+        return container
     }
 
     override fun onStartInput(info: EditorInfo?, restarting: Boolean) {
@@ -136,6 +201,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         val view = keyboardView
         if (view != null) {
             view.previewEnabled = s.previewPopup
+            view.showHelperLabels = s.showHelperLabels
             view.keyHeightPx = s.keyHeightDp * resources.displayMetrics.density
             view.applyTheme(Themes.byId(s.themeId))
             // Load background image if a URI is set
@@ -177,21 +243,41 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     private fun switchLayout(id: String) {
-        val nextId = if (id == "next_lang") {
-            getNextLanguageId(currentLayoutId)
-        } else {
-            id
+        val nextId = when (id) {
+            "next_lang" -> getNextLanguageId(currentLayoutId)
+            "back" -> lastTextLayoutId
+            else -> id
         }
+        
+        if (nextId in listOf("qwerty", "hindi", "urdu", "chinese")) {
+            lastTextLayoutId = nextId
+        }
+        
         currentLayoutId = nextId
         if (nextId == "clipboard") {
             keyboardView?.setLayout(getClipboardLayout())
+        } else if (nextId == "emoji") {
+            keyboardView?.setLayout(getEmojiLayout())
         } else {
-            keyboardView?.setLayout(layouts.load(nextId))
+            // Respect Pro plan block for Urdu & Chinese
+            if (!settings.isPro && (nextId == "urdu" || nextId == "chinese")) {
+                Toast.makeText(this, "${nextId.uppercase()} keyboard is a PRO feature!", Toast.LENGTH_SHORT).show()
+                currentLayoutId = "qwerty"
+                lastTextLayoutId = "qwerty"
+                keyboardView?.setLayout(layouts.load("qwerty"))
+            } else {
+                keyboardView?.setLayout(layouts.load(nextId))
+            }
         }
+        updateSuggestions()
     }
 
     private fun getNextLanguageId(current: String): String {
-        val langs = listOf("qwerty", "hindi", "urdu", "chinese")
+        val langs = if (settings.isPro) {
+            listOf("qwerty", "hindi", "urdu", "chinese")
+        } else {
+            listOf("qwerty", "hindi")
+        }
         val idx = langs.indexOf(current)
         if (idx == -1) return "qwerty"
         return langs[(idx + 1) % langs.size]
@@ -233,7 +319,13 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
             switchLayout("clipboard")
             return
         }
+        if (key.output != null && key.output.startsWith("__EMOJI_CAT_")) {
+            currentEmojiCategory = key.output.removePrefix("__EMOJI_CAT_").lowercase()
+            switchLayout("emoji")
+            return
+        }
         dispatcher.dispatch(key, currentInputConnection)
+        updateSuggestions()
     }
 
     override fun onModifierDown(modifier: Modifier) {
@@ -269,12 +361,85 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         }
     }
 
+    override fun onSpaceSwipe(direction: Int) {
+        val allowedLangs = if (settings.isPro) {
+            listOf("qwerty", "hindi", "urdu", "chinese")
+        } else {
+            listOf("qwerty", "hindi")
+        }
+        var idx = allowedLangs.indexOf(currentLayoutId)
+        if (idx == -1) idx = 0
+        val nextIdx = if (direction < 0) {
+            (idx - 1 + allowedLangs.size) % allowedLangs.size
+        } else {
+            (idx + 1) % allowedLangs.size
+        }
+        switchLayout(allowedLangs[nextIdx])
+        
+        val label = when (allowedLangs[nextIdx]) {
+            "qwerty" -> "English"
+            "hindi" -> "Hindi"
+            "urdu" -> "Urdu"
+            "chinese" -> "Chinese"
+            else -> allowedLangs[nextIdx]
+        }
+        Toast.makeText(this, "Language: $label", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onSpaceLongPress() {
+        translateSelectedText()
+    }
+
+    override fun onKeyLongPress(key: Key) {
+        if (currentLayoutId == "emoji" && isEmoji(key.label)) {
+            val name = EmojiData.getEmojiName(key.label)
+            Toast.makeText(this, name, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun getEmojiLayout(): KeyboardLayout {
+        val rows = ArrayList<Row>()
+
+        // Row 1: Category Selection Tabs
+        val headerKeys = listOf(
+            Key(label = "← Back", type = KeyType.LAYOUT_SWITCH, switchTo = "back", widthWeight = 1.6f),
+            Key(label = "😀 Smile", type = KeyType.CHAR, output = "__EMOJI_CAT_SMILE__", widthWeight = 1.6f),
+            Key(label = "🦁 Animal", type = KeyType.CHAR, output = "__EMOJI_CAT_ANIMAL__", widthWeight = 1.6f),
+            Key(label = "🍔 Food", type = KeyType.CHAR, output = "__EMOJI_CAT_FOOD__", widthWeight = 1.6f),
+            Key(label = "🇵🇰 Flag", type = KeyType.CHAR, output = "__EMOJI_CAT_FLAG__", widthWeight = 1.6f)
+        )
+        rows.add(Row(keys = headerKeys, heightWeight = 0.8f))
+
+        val emojiList = when (currentEmojiCategory) {
+            "animal" -> EmojiData.animals
+            "food" -> EmojiData.food
+            "flag" -> EmojiData.flags
+            else -> EmojiData.smileys
+        }
+
+        val emojisPerRow = 10
+        val itemsToShow = emojiList.take(60)
+        for (i in itemsToShow.indices step emojisPerRow) {
+            val rowEmojis = itemsToShow.subList(i, Math.min(i + emojisPerRow, itemsToShow.size))
+            val keys = rowEmojis.map { emoji ->
+                Key(label = emoji, type = KeyType.CHAR, output = emoji, widthWeight = 0.8f)
+            }
+            rows.add(Row(keys = keys, heightWeight = 0.9f))
+        }
+
+        return KeyboardLayout(
+            id = "emoji",
+            label = "Emoji",
+            rows = rows
+        )
+    }
+
     private fun getClipboardLayout(): KeyboardLayout {
         val rows = ArrayList<Row>()
 
         // Row 1: Header/Navigation
         val headerKeys = listOf(
-            Key(label = "← Back", type = KeyType.LAYOUT_SWITCH, switchTo = "qwerty", widthWeight = 2f),
+            Key(label = "← Back", type = KeyType.LAYOUT_SWITCH, switchTo = "back", widthWeight = 2f),
             Key(label = "Clipboard History", type = KeyType.CHAR, output = "", widthWeight = 4f),
             Key(label = "Clear", type = KeyType.CHAR, output = "__CLEAR_CLIPBOARD__", widthWeight = 2f)
         )
@@ -301,13 +466,227 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         )
     }
 
+    private fun openSettingsApp() {
+        val intent = android.content.Intent(this, com.deckkey.app.MainActivity::class.java).apply {
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        startActivity(intent)
+    }
+
+    private fun updateSuggestions() {
+        val ic = currentInputConnection ?: return
+        val before = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
+
+        val lastWordMatch = Regex("([a-zA-Z0-9\\u0600-\\u06FF\\u0900-\\u097F\\u4E00-\\u9FFF]+)$").find(before)
+        val lastWord = lastWordMatch?.value ?: ""
+
+        val suggestions = getSuggestionsForWord(lastWord)
+
+        for (i in 0..2) {
+            if (i < suggestions.size) {
+                suggestionTextViews[i].text = suggestions[i]
+                suggestionTextViews[i].visibility = View.VISIBLE
+            } else {
+                suggestionTextViews[i].text = ""
+                suggestionTextViews[i].visibility = View.INVISIBLE
+            }
+        }
+    }
+
+    private fun getSuggestionsForWord(word: String): List<String> {
+        val results = ArrayList<String>()
+        if (word.isEmpty()) {
+            return listOf("the", "and", "you")
+        }
+
+        // 1. Emoji suggestions (Free!)
+        val emojiSuggestions = getEmojiSuggestions(word)
+        results.addAll(emojiSuggestions)
+
+        // 2. Word completion dictionary suggestions
+        val wordList = when (currentLayoutId) {
+            "urdu" -> listOf("کیا", "ہے", "ہیں", "کو", "نے", "سے", "کا", "کی", "کے", "پر", "میں", "تو", "بھی", "یہ", "وہ", "کر", "نہ", "ہوں", "ہم", "تم", "آپ", "اور", "نہیں", "ہو", "تھا", "تھی", "تھے", "گا", "گی", "گے", "سلام", "کیسے", "امید", "ٹھیک", "شکریہ")
+            "hindi" -> listOf("है", "हैं", "को", "ने", "से", "का", "की", "के", "पर", "में", "तो", "भी", "यह", "वह", "कर", "न", "हूं", "हम", "तुम", "आप", "और", "नहीं", "हो", "था", "थी", "थे", "गा", "गी", "गे", "नमस्ते", "कैसे", "ठीक", "धन्यवाद")
+            "chinese" -> listOf("的", "一", "是", "在", "不", "了", "有", "人", "我", "他", "这", "个", "们", "中", "来", "上", "大", "为", "和", "国", "地", "到", "以", "说", "时", "要", "会", "自", "出", "下", "你好", "谢谢")
+            else -> listOf("the", "be", "to", "of", "and", "a", "in", "that", "have", "it", "for", "not", "on", "with", "he", "as", "you", "do", "at", "this", "but", "his", "by", "from", "they", "we", "say", "her", "she", "or", "an", "will", "my", "one", "all", "would", "there", "their", "what", "so", "up", "out", "if", "about", "who", "get", "which", "go", "me", "hello", "thanks", "good", "morning", "night", "great", "please")
+        }
+
+        val wLower = word.lowercase()
+        val wordMatches = wordList.filter { it.lowercase().startsWith(wLower) }.take(3 - results.size)
+        results.addAll(wordMatches)
+
+        return results.distinct().take(3)
+    }
+
+    private fun getEmojiSuggestions(word: String): List<String> {
+        val cleanWord = word.trim().lowercase()
+        if (cleanWord.isEmpty()) return emptyList()
+
+        val map = mapOf(
+            "haha" to listOf("😂", "😀", "😆"),
+            "smile" to listOf("😀", "😊", "🙂"),
+            "love" to listOf("❤️", "😍", "🥰"),
+            "sad" to listOf("😭", "😢", "😔"),
+            "angry" to listOf("😡", "😠", "🤬"),
+            "cool" to listOf("😎", "😏"),
+            "party" to listOf("🎉", "🥳"),
+            "think" to listOf("🤔", "🧐"),
+            "thanks" to listOf("🙏", "👍", "🙌"),
+            "yes" to listOf("👍", "✅"),
+            "no" to listOf("👎", "❌"),
+            "hot" to listOf("🔥", "🥵"),
+            "cat" to listOf("🐱", "🐈"),
+            "dog" to listOf("🐶", "🐕"),
+            "lion" to listOf("🦁"),
+            "tiger" to listOf("🐯"),
+            "panda" to listOf("🐼"),
+            "pizza" to listOf("🍕"),
+            "burger" to listOf("🍔"),
+            "apple" to listOf("🍎", "🍏"),
+            "coffee" to listOf("☕"),
+            "beer" to listOf("🍺"),
+            "pakistan" to listOf("🇵🇰"),
+            "pakistani" to listOf("🇵🇰"),
+            "india" to listOf("🇮🇳"),
+            "indian" to listOf("🇮🇳"),
+            "america" to listOf("🇺🇸"),
+            "usa" to listOf("🇺🇸"),
+            "uk" to listOf("🇬🇧"),
+            "england" to listOf("🇬🇧"),
+            "saudi" to listOf("🇸🇦"),
+            "china" to listOf("🇨🇳"),
+            "chinese" to listOf("🇨🇳"),
+            "palestine" to listOf("🇵🇸"),
+            "turkey" to listOf("🇹🇷"),
+            "germany" to listOf("🇩🇪"),
+            "france" to listOf("🇫🇷"),
+            "japan" to listOf("🇯🇵")
+        )
+
+        val results = ArrayList<String>()
+        for ((trigger, emojis) in map) {
+            if (trigger.startsWith(cleanWord) || cleanWord.startsWith(trigger)) {
+                results.addAll(emojis)
+            }
+        }
+        return results.distinct().take(3)
+    }
+
+    private fun onSuggestionClicked(suggestionText: String) {
+        if (suggestionText.isEmpty()) return
+        val ic = currentInputConnection ?: return
+        val before = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
+        val lastWordMatch = Regex("([a-zA-Z0-9\\u0600-\\u06FF\\u0900-\\u097F\\u4E00-\\u9FFF]+)$").find(before)
+        if (lastWordMatch != null) {
+            val lastWord = lastWordMatch.value
+            ic.deleteSurroundingText(lastWord.length, 0)
+        }
+        ic.commitText(suggestionText + " ", 1)
+        updateSuggestions()
+    }
+
+    private fun translateSelectedText() {
+        if (!settings.isPro) {
+            Toast.makeText(this, "Translation is a PRO feature!", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val ic = currentInputConnection ?: return
+        var textToTranslate = ic.getSelectedText(0)?.toString() ?: ""
+        if (textToTranslate.isEmpty()) {
+            val before = ic.getTextBeforeCursor(30, 0)?.toString() ?: ""
+            val lastWordMatch = Regex("([a-zA-Z0-9\\u0600-\\u06FF\\u0900-\\u097F\\u4E00-\\u9FFF]+)$").find(before)
+            textToTranslate = lastWordMatch?.value ?: ""
+        }
+
+        if (textToTranslate.isEmpty()) {
+            Toast.makeText(this, "No text to translate", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val translation = performOfflineTranslation(textToTranslate)
+        showTranslationBar(textToTranslate, translation)
+    }
+
+    private fun performOfflineTranslation(text: String): String {
+        val dict = mapOf(
+            "کیا" to "what", "ہے" to "is / has", "ہیں" to "are", "کو" to "to / for",
+            "نے" to "(subject marker)", "سے" to "from / with", "کا" to "of", "کی" to "of",
+            "کے" to "of", "پر" to "on", "میں" to "in", "تو" to "then", "بھی" to "also",
+            "یہ" to "this / it", "وہ" to "that / he / she", "کر" to "do", "نہ" to "not",
+            "ہوں" to "am", "ہم" to "we", "تم" to "you", "آپ" to "you (respectful)",
+            "اور" to "and", "نہیں" to "no / not", "ہو" to "be", "تھا" to "was",
+            "تھی" to "was", "تھے" to "were", "سلام" to "hello", "کیسے" to "how",
+            "امید" to "hope", "ٹھیک" to "fine / okay", "شکریہ" to "thank you",
+            "नमस्ते" to "hello / greetings", "धन्यवाद" to "thank you",
+            "你" to "you", "好" to "good / well", "你好" to "hello", "谢谢" to "thank you",
+            "的" to "of / 's", "我" to "I / me", "是" to "is / am / are", "在" to "at / in"
+        )
+
+        val words = text.split(Regex("\\s+"))
+        val translatedWords = words.map { w ->
+            dict[w] ?: dict[w.lowercase()] ?: "[$w]"
+        }
+        return translatedWords.joinToString(" ")
+    }
+
+    private fun showTranslationBar(original: String, translated: String) {
+        suggestionBar.removeAllViews()
+
+        val context = this
+        val tv = TextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                0,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                1.0f
+            )
+            gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            setPadding((12 * resources.displayMetrics.density).toInt(), 0, 0, 0)
+            setTextColor(android.graphics.Color.parseColor("#3d6ef5"))
+            text = "Translated: $translated"
+            textSize = 13f
+            ellipsize = android.text.TextUtils.TruncateAt.END
+            maxLines = 1
+        }
+
+        val closeButton = TextView(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                (40 * resources.displayMetrics.density).toInt(),
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            gravity = Gravity.CENTER
+            setTextColor(android.graphics.Color.RED)
+            text = "✖"
+            textSize = 16f
+            isClickable = true
+            setOnClickListener {
+                restoreSuggestionBar()
+            }
+        }
+
+        suggestionBar.addView(tv)
+        suggestionBar.addView(closeButton)
+    }
+
+    private fun restoreSuggestionBar() {
+        suggestionBar.removeAllViews()
+        for (tv in suggestionTextViews) {
+            suggestionBar.addView(tv)
+        }
+        updateSuggestions()
+    }
+
+    private fun isEmoji(s: String): Boolean {
+        if (s.isEmpty()) return false
+        val codePoint = s.codePointAt(0)
+        return codePoint in 0x1F300..0x1F9FF || codePoint in 0x2600..0x27BF || s.length > 2
+    }
+
     private fun showPowerMenuDialog() {
-        // IME services cannot show AlertDialogs directly - show a toast instead
         Toast.makeText(this, "Power menu: Alt+F4 detected. Use device power button.", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
-        repeat.destroy()  // FIX: Properly cleanup repeat controller
+        repeat.destroy()
         speech.stop()
         scope.cancel()
         super.onDestroy()

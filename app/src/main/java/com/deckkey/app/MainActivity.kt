@@ -147,6 +147,7 @@ class MainActivity : AppCompatActivity() {
                 binding.cbHaptics.isChecked = s.haptics
                 binding.cbSound.isChecked = s.sound
                 binding.cbPopup.isChecked = s.previewPopup
+                binding.cbHelperLabels.isChecked = s.showHelperLabels
 
                 binding.seekKeyHeight.max = KbSettings.MAX_KEY_HEIGHT - KbSettings.MIN_KEY_HEIGHT
                 binding.seekKeyHeight.progress = s.keyHeightDp - KbSettings.MIN_KEY_HEIGHT
@@ -167,6 +168,14 @@ class MainActivity : AppCompatActivity() {
         binding.cbHaptics.setOnCheckedChangeListener { _, v -> save { it.copy(haptics = v) } }
         binding.cbSound.setOnCheckedChangeListener { _, v -> save { it.copy(sound = v) } }
         binding.cbPopup.setOnCheckedChangeListener { _, v -> save { it.copy(previewPopup = v) } }
+        binding.cbHelperLabels.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked && !isPro) {
+                buttonView.isChecked = false
+                Toast.makeText(this, "Pronunciation hints are a PRO feature. Please upgrade!", Toast.LENGTH_LONG).show()
+            } else {
+                save { it.copy(showHelperLabels = isChecked) }
+            }
+        }
 
         binding.seekKeyHeight.setOnSeekBarChangeListener(simpleSeek { p ->
             val h = KbSettings.MIN_KEY_HEIGHT + p

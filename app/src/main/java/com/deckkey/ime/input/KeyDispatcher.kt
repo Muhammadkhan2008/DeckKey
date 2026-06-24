@@ -30,6 +30,7 @@ class KeyDispatcher(
     private val onImeSwitch: () -> Unit,
     private val onMic: () -> Unit = {},
     private val onAltF4: () -> Unit = {},
+    private val onF1: () -> Unit = {},
 ) {
     private val charMap = KeyCharacterMap.load(KeyCharacterMap.VIRTUAL_KEYBOARD)
     private var lastSpaceTime = 0L
@@ -55,6 +56,8 @@ class KeyDispatcher(
                         ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_R, 0, metaCtrl))
                     } else if (key.keyCode == 62) { // Space key
                         handleSpace(ic)
+                    } else if (key.keyCode in 131..142) {
+                        handleFKeyShortcut(ic, key.keyCode)
                     } else {
                         sendKeyCode(ic, key.keyCode)
                     }
@@ -201,6 +204,22 @@ class KeyDispatcher(
         } catch (e: Exception) {
             null
         }
+    }
+
+    private fun handleFKeyShortcut(ic: InputConnection, keyCode: Int) {
+        when (keyCode) {
+            131 -> onF1() // F1 -> Settings
+            133 -> sendChord(ic, KeyEvent.KEYCODE_F, KeyEvent.META_CTRL_ON) // F3 -> Find (Ctrl+F)
+            134 -> sendChord(ic, KeyEvent.KEYCODE_D, KeyEvent.META_ALT_ON)  // F4 -> Focus URL (Alt+D)
+            136 -> sendChord(ic, KeyEvent.KEYCODE_L, KeyEvent.META_CTRL_ON) // F6 -> Focus URL (Ctrl+L)
+            else -> sendKeyCode(ic, keyCode) // F2, F5 (handled), F7-F12 send standard
+        }
+    }
+
+    private fun sendChord(ic: InputConnection, keyCode: Int, metaState: Int) {
+        val now = System.currentTimeMillis()
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0, metaState))
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0, metaState))
     }
 
     private fun emitChar(ic: InputConnection, key: Key) {

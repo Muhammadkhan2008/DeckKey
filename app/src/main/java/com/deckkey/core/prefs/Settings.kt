@@ -13,6 +13,7 @@ data class Settings(
     val haptics: Boolean = true,
     val sound: Boolean = false,
     val previewPopup: Boolean = true,
+    val showHelperLabels: Boolean = false,
     val keyHeightDp: Int = 46,
     val repeatInitialDelayMs: Int = 400,
     val repeatIntervalMs: Int = 45,

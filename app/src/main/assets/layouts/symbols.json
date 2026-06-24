@@ -74,7 +74,7 @@
     },
     {
       "keys": [
-        { "label": "ABC", "type": "LAYOUT_SWITCH", "switchTo": "qwerty", "widthWeight": 1.2 },
+        { "label": "ABC", "type": "LAYOUT_SWITCH", "switchTo": "back", "widthWeight": 1.2 },
         { "label": "=\\\\<", "type": "LAYOUT_SWITCH", "switchTo": "symbols2", "widthWeight": 1.0 },
         { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 0.8 },
         { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 0.8 },
@@ -82,7 +82,7 @@
         { "label": "📋", "type": "LAYOUT_SWITCH", "switchTo": "clipboard", "widthWeight": 0.8 },
         { "label": ".", "output": ".", "widthWeight": 0.8 },
         { "label": "Tab", "type": "KEYCODE", "keyCode": 61, "widthWeight": 0.8 },
-        { "label": "🌐", "type": "IME_SWITCH", "widthWeight": 0.8 }
+        { "label": "😀", "type": "LAYOUT_SWITCH", "switchTo": "emoji", "widthWeight": 0.8 }
       ]
     }
   ]

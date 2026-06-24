@@ -46,6 +46,9 @@ class KeyboardView @JvmOverloads constructor(
         fun onRepeatStart(key: Key)
         fun onRepeatStop()
         fun onSpaceDrag(steps: Int)
+        fun onSpaceSwipe(direction: Int)
+        fun onSpaceLongPress()
+        fun onKeyLongPress(key: Key)
     }
 
     var listener: Listener? = null
@@ -69,6 +72,14 @@ class KeyboardView @JvmOverloads constructor(
     private var spaceDragStartX: Float = 0f
     private var isSpaceDragging: Boolean = false
     private val spaceDragThreshold: Float get() = dp(12f)
+
+    var showHelperLabels: Boolean = false
+
+    private var initialSpaceTouchX: Float = 0f
+    private var longPressKey: PositionedKey? = null
+    private var hasFiredLongPress: Boolean = false
+    private val longPressRunnable = Runnable { handleLongPress() }
+
 
     // IMPROVEMENT: Slightly larger gap for thumb-friendly spacing
     private val gap = dp(4f)
@@ -276,7 +287,12 @@ class KeyboardView @JvmOverloads constructor(
         canvas.drawText(label, cx, baseline, keyText)
 
         // hint (corner)
-        key.hint?.let { canvas.drawText(it, faceR.right - dp(9f), faceR.top + dp(13f), hintText) }
+        val cornerHint = if (showHelperLabels && layout?.id != "qwerty" && key.type == KeyType.CHAR) {
+            key.label
+        } else {
+            key.hint
+        }
+        cornerHint?.let { canvas.drawText(it, faceR.right - dp(9f), faceR.top + dp(13f), hintText) }
 
         // lock indicator dot for LOCKED modifiers / caps lock
         val locked = (key.type == KeyType.MODIFIER && key.modifier != null &&
@@ -326,7 +342,7 @@ class KeyboardView @JvmOverloads constructor(
             }
             MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> {
                 val idx = event.actionIndex
-                handleUp(event.getPointerId(idx))
+                handleUp(event.getPointerId(idx), event.getX(idx))
             }
             MotionEvent.ACTION_CANCEL -> {
                 for (id in activePointers.keys.toList()) cancelPointer(id)
@@ -340,9 +356,15 @@ class KeyboardView @JvmOverloads constructor(
         activePointers[pointerId] = pk
         val key = pk.key
 
+        hasFiredLongPress = false
+        longPressKey = pk
+        handler.removeCallbacks(longPressRunnable)
+        handler.postDelayed(longPressRunnable, 400)
+
         if (key.keyCode == 62 || key.label.equals("space", ignoreCase = true) || key.baseOutput == " ") {
             spacePointerId = pointerId
             spaceDragStartX = x
+            initialSpaceTouchX = x
             isSpaceDragging = false
         }
 
@@ -368,10 +390,19 @@ class KeyboardView @JvmOverloads constructor(
         if (pointerId == spacePointerId) {
             val dx = x - spaceDragStartX
             val threshold = spaceDragThreshold
+            val totalDx = x - initialSpaceTouchX
+            if (Math.abs(totalDx) > dp(80f)) {
+                isSpaceDragging = true
+                handler.removeCallbacks(longPressRunnable)
+                preview.dismiss()
+                return
+            }
+
             if (isSpaceDragging || Math.abs(dx) > threshold) {
                 if (!isSpaceDragging) {
                     isSpaceDragging = true
                     listener?.onRepeatStop()
+                    handler.removeCallbacks(longPressRunnable)
                     preview.dismiss()
                 }
                 val steps = (dx / threshold).toInt()
@@ -390,33 +421,36 @@ class KeyboardView @JvmOverloads constructor(
 
         if (isWithinSlop) return  // FIX: Clearer logic
 
-        // Finger moved outside slop. Look for new key nearby.
-        val moved = hitTest(x, y)
-        val key = current.key
-        if (key.repeatable && key.type != KeyType.MODIFIER) listener?.onRepeatStop()
-        if (shouldPreview(key)) preview.dismiss()
-
-        // FIX: Only switch to new key if we actually found one nearby
-        if (moved != null && moved !== current) {
-            activePointers[pointerId] = moved
-            val mk = moved.key
-            if (mk.type != KeyType.MODIFIER) {
-                listener?.onKeyDown(mk)
-                if (previewEnabled && shouldPreview(mk)) preview.show(this, moved, labelFor(mk, modifiers))
-            }
-            invalidate()
-        } else {
-            // Moved too far away without landing on another key - cancel
-            cancelPointer(pointerId)
-        }
+        // Finger moved outside slop: cancel touch to prevent adjacent keys from firing accidentally!
+        handler.removeCallbacks(longPressRunnable)
+        longPressKey = null
+        cancelPointer(pointerId)
     }
 
-    private fun handleUp(pointerId: Int) {
+    private fun handleUp(pointerId: Int, x: Float) {
+        handler.removeCallbacks(longPressRunnable)
+        longPressKey = null
+
         val pk = activePointers.remove(pointerId) ?: return
         val key = pk.key
 
+        if (hasFiredLongPress) {
+            hasFiredLongPress = false
+            if (shouldPreview(key)) preview.dismiss()
+            invalidate()
+            return
+        }
+
         if (pointerId == spacePointerId) {
             spacePointerId = -1
+            val totalDx = x - initialSpaceTouchX
+            if (isSpaceDragging && Math.abs(totalDx) > dp(80f)) {
+                isSpaceDragging = false
+                listener?.onSpaceSwipe(if (totalDx < 0) -1 else 1)
+                if (shouldPreview(key)) preview.dismiss()
+                invalidate()
+                return
+            }
             if (isSpaceDragging) {
                 isSpaceDragging = false
                 if (shouldPreview(key)) preview.dismiss()
@@ -442,6 +476,9 @@ class KeyboardView @JvmOverloads constructor(
     }
 
     private fun cancelPointer(pointerId: Int) {
+        handler.removeCallbacks(longPressRunnable)
+        longPressKey = null
+
         val pk = activePointers.remove(pointerId) ?: return
 
         if (pointerId == spacePointerId) {
@@ -450,6 +487,28 @@ class KeyboardView @JvmOverloads constructor(
         }
 
         if (pk.key.repeatable) listener?.onRepeatStop()
+        preview.dismiss()
+        invalidate()
+    }
+
+    private fun handleLongPress() {
+        val pk = longPressKey ?: return
+        val key = pk.key
+        hasFiredLongPress = true
+
+        try {
+            performHapticFeedback(
+                android.view.HapticFeedbackConstants.LONG_PRESS,
+                android.view.HapticFeedbackConstants.FLAG_IGNORE_GLOBAL_SETTING
+            )
+        } catch (_: Exception) {}
+
+        if (key.keyCode == 62 || key.label.equals("space", ignoreCase = true) || key.baseOutput == " ") {
+            listener?.onSpaceLongPress()
+        } else {
+            listener?.onKeyLongPress(key)
+        }
+
         preview.dismiss()
         invalidate()
     }

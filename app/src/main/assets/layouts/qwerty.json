@@ -94,7 +94,7 @@
       "keys": [
         { "label": "Ctrl", "type": "MODIFIER", "modifier": "CTRL", "widthWeight": 0.8 },
         { "label": "Alt", "type": "MODIFIER", "modifier": "ALT", "widthWeight": 0.8 },
-        { "label": "🌐", "type": "LAYOUT_SWITCH", "switchTo": "next_lang", "widthWeight": 0.8 },
+        { "label": "😀", "type": "LAYOUT_SWITCH", "switchTo": "emoji", "widthWeight": 0.8 },
         { "label": "?123", "type": "LAYOUT_SWITCH", "switchTo": "symbols", "widthWeight": 1.0 },
         { "label": "Space", "type": "KEYCODE", "keyCode": 62, "repeatable": true, "widthWeight": 5.2 },
         { "label": "←", "type": "KEYCODE", "keyCode": 21, "repeatable": true, "widthWeight": 0.8 },
