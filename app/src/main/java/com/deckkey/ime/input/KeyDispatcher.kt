@@ -48,16 +48,8 @@ class KeyDispatcher(
                     val alt = modifiers.isActive(Modifier.ALT)
                     if (alt && key.keyCode == 134) { // Alt + F4
                         onAltF4()
-                    } else if (key.keyCode == 135) { // F5
-                        // Send Ctrl + R (Universal Browser Refresh Shortcut)
-                        val now = System.currentTimeMillis()
-                        val metaCtrl = KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON
-                        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_R, 0, metaCtrl))
-                        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_R, 0, metaCtrl))
                     } else if (key.keyCode == 62) { // Space key
                         handleSpace(ic)
-                    } else if (key.keyCode in 131..142) {
-                        handleFKeyShortcut(ic, key.keyCode)
                     } else {
                         sendKeyCode(ic, key.keyCode)
                     }
@@ -203,16 +195,6 @@ class KeyDispatcher(
             }.parse()
         } catch (e: Exception) {
             null
-        }
-    }
-
-    private fun handleFKeyShortcut(ic: InputConnection, keyCode: Int) {
-        when (keyCode) {
-            131 -> onF1() // F1 -> Settings
-            133 -> sendChord(ic, KeyEvent.KEYCODE_F, KeyEvent.META_CTRL_ON) // F3 -> Find (Ctrl+F)
-            134 -> sendChord(ic, KeyEvent.KEYCODE_D, KeyEvent.META_ALT_ON)  // F4 -> Focus URL (Alt+D)
-            136 -> sendChord(ic, KeyEvent.KEYCODE_L, KeyEvent.META_CTRL_ON) // F6 -> Focus URL (Ctrl+L)
-            else -> sendKeyCode(ic, keyCode) // F2, F5 (handled), F7-F12 send standard
         }
     }
 

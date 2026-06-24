@@ -412,19 +412,19 @@ class KeyboardView @JvmOverloads constructor(
                 }
                 return
             }
+            return // Prevent falling through to slop check for spacebar!
         }
 
-        // Still within the key (plus slop tolerance)? Keep the press alive — this
-        // stops natural finger jitter from cancelling a tap.
-        val isWithinSlop = x >= b.left - touchSlop && x <= b.right + touchSlop &&
-                           y >= b.top - touchSlop && y <= b.bottom + touchSlop
-
-        if (isWithinSlop) return  // FIX: Clearer logic
-
-        // Finger moved outside slop: cancel touch to prevent adjacent keys from firing accidentally!
-        handler.removeCallbacks(longPressRunnable)
-        longPressKey = null
-        cancelPointer(pointerId)
+        // For other keys, only cancel if the finger moves very far (e.g. >70dp) from the key center.
+        // This keeps the keypress active for small drifts/jitters and prevents wrong adjacent key registration.
+        val dx = x - (b.left + b.right) / 2f
+        val dy = y - (b.top + b.bottom) / 2f
+        val distance = Math.sqrt((dx * dx + dy * dy).toDouble())
+        if (distance > dp(70f)) {
+            handler.removeCallbacks(longPressRunnable)
+            longPressKey = null
+            cancelPointer(pointerId)
+        }
     }
 
     private fun handleUp(pointerId: Int, x: Float) {
