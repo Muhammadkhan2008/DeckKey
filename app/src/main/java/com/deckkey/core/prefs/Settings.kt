@@ -24,6 +24,8 @@ data class Settings(
     /** 0..100 dim applied over the background image so labels stay readable. */
     val backgroundDim: Int = 45,
     val isPro: Boolean = true, // Developer build - PRO enabled by default
+    /** User-defined text snippets triggered by !keyword */
+    val macros: Map<String, String> = mapOf("!email" to "user@example.com", "!shrug" to "¯\\_(ツ)_/¯"),
 ) {
     companion object {
         val DEFAULT = Settings()

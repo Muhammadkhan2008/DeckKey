@@ -22,6 +22,11 @@ data class Theme(
     val textDim: Int,
     /** True for light backgrounds, so labels/preview can adapt. */
     val isLight: Boolean = false,
+    /** New Blueprint Themes */
+    val isGlassmorphism: Boolean = false,
+    val isNeumorphic: Boolean = false,
+    val isCyberpunk: Boolean = false,
+    val isMinimalist: Boolean = false
 )
 
 /**
@@ -111,11 +116,44 @@ object Themes {
         isLight = true,
     )
 
+    val GLASS = Theme(
+        id = "glass", name = "Minimalist Frosted Glass",
+        background = Color.TRANSPARENT, keyNormal = Color.argb(30, 255, 255, 255), keyNormalPressed = Color.argb(60, 255, 255, 255),
+        keySpecial = Color.argb(15, 255, 255, 255), keySpecialPressed = Color.argb(45, 255, 255, 255),
+        modifierActive = c("#58A6FF"), text = c("#FFFFFF"), textDim = c("#B0B0B0"),
+        isGlassmorphism = true
+    )
+
+    val NEUMORPHIC = Theme(
+        id = "neumorphic", name = "Neumorphic Soft Light",
+        background = c("#E0E5EC"), keyNormal = c("#E0E5EC"), keyNormalPressed = c("#D1D9E6"),
+        keySpecial = c("#D9DFE8"), keySpecialPressed = c("#C5CDDB"),
+        modifierActive = c("#4F46E5"), text = c("#333333"), textDim = c("#888888"),
+        isLight = true, isNeumorphic = true
+    )
+
+    val CYBERPUNK = Theme(
+        id = "cyberpunk", name = "RGB Neon Cyberpunk",
+        background = c("#030303"), keyNormal = c("#080808"), keyNormalPressed = c("#1A1A1A"),
+        keySpecial = c("#050505"), keySpecialPressed = c("#111111"),
+        modifierActive = c("#FF007F"), text = c("#00F0FF"), textDim = c("#FF007F"),
+        isCyberpunk = true
+    )
+
+    val MINIMALIST = Theme(
+        id = "minimalist", name = "Hyper-Minimalist",
+        background = c("#101010"), keyNormal = c("#101010"), keyNormalPressed = c("#222222"),
+        keySpecial = c("#151515"), keySpecialPressed = c("#2A2A2A"),
+        modifierActive = c("#FFFFFF"), text = c("#FFFFFF"), textDim = c("#666666"),
+        isMinimalist = true
+    )
+
     val all: List<Theme> = listOf(
+        GLASS, NEUMORPHIC, CYBERPUNK, MINIMALIST,
         MIDNIGHT, SLATE, DRACULA, NORD, OCEAN, FOREST, SUNSET, GRAPE, CARBON, PAPER, SAND,
     )
 
-    val default = MIDNIGHT
+    val default = GLASS
 
     fun byId(id: String?): Theme = all.firstOrNull { it.id == id } ?: default
 }

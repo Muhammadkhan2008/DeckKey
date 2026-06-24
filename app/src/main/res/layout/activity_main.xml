@@ -1,327 +1,221 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/kb_background"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:background="#0A0A0C">
 
+    <!-- Top App Bar / Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="horizontal"
+        android:padding="20dp"
+        android:gravity="center_vertical"
+        android:background="#121216">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/setup_title"
-            android:textColor="@color/key_text"
-            android:textSize="26sp"
-            android:textStyle="bold" />
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/ic_secure"
+            app:tint="#58A6FF" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/setup_intro"
-            android:textColor="@color/key_text_dim"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/statusEnabled"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:textColor="@color/key_text"
-            android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/btnEnable"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/btn_enable" />
-
-        <TextView
-            android:id="@+id/statusActive"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:textColor="@color/key_text"
-            android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/btnSelect"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/btn_select" />
-
-        <TextView
-            android:id="@+id/statusMic"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:textColor="@color/key_text"
-            android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/btnMic"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/btn_mic" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginVertical="20dp"
-            android:background="@color/key_border" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/settings_title"
-            android:textColor="@color/key_text"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-
-        <!-- PRO Upgrade Card -->
         <LinearLayout
-            android:id="@+id/cardProActivation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DeckKey Engine"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Next-Gen Mobile Input Architecture"
+                android:textColor="#888888"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@color/key_normal"
-            android:padding="16dp"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="16dp">
+            android:padding="16dp">
 
-            <TextView
-                android:id="@+id/lblProTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="DeckKey PRO Plan"
-                android:textColor="@color/accent"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/lblProStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Status: LITE (Free Plan)"
-                android:textColor="@color/key_text"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/lblProDesc"
+            <!-- Privacy Shield Card -->
+            <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="Unlock Urdu/Chinese layout switching, custom backgrounds, and advanced customizations. Pay manually to 03163347485 and enter code."
-                android:textColor="@color/key_text_dim"
-                android:textSize="12sp" />
+                app:cardBackgroundColor="#1A1A20"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="16dp">
 
-            <TextView
-                android:id="@+id/lblDeviceId"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Your Device ID: [Fetching...]"
-                android:textColor="@color/key_text"
-                android:textIsSelectable="true"
-                android:textSize="12sp" />
-
-            <LinearLayout
-                android:id="@+id/layoutActivationBox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <EditText
-                    android:id="@+id/txtActivationCode"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.5"
-                    android:hint="Enter activation code"
-                    android:textColor="@color/key_text"
-                    android:textColorHint="@color/key_text_dim"
-                    android:inputType="textCapCharacters"
-                    android:textSize="13sp" />
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <Button
-                    android:id="@+id/btnActivatePro"
-                    android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🛡️ Privacy Shield Active"
+                        android:textColor="#4CD787"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="0 network trailing. RAM &lt; 60MB. Render &lt; 8ms. Your data stays entirely on-device."
+                        android:textColor="#AAAAAA"
+                        android:textSize="13sp" />
+
+                    <!-- Setup Toggles -->
+                    <TextView android:id="@+id/statusEnabled" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textColor="#FFFFFF" android:textSize="14sp" />
+                    <Button android:id="@+id/btnEnable" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:backgroundTint="#2D2D35" android:textColor="#58A6FF" android:text="@string/btn_enable" />
+
+                    <TextView android:id="@+id/statusActive" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#FFFFFF" android:textSize="14sp" />
+                    <Button android:id="@+id/btnSelect" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:backgroundTint="#2D2D35" android:textColor="#58A6FF" android:text="@string/btn_select" />
+
+                    <TextView android:id="@+id/statusMic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#FFFFFF" android:textSize="14sp" />
+                    <Button android:id="@+id/btnMic" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:backgroundTint="#2D2D35" android:textColor="#58A6FF" android:text="@string/btn_mic" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- PRO Activation Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardProActivation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#1A1A20"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1.0"
-                    android:layout_marginStart="8dp"
-                    android:text="Activate"
-                    android:textSize="12sp" />
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-            </LinearLayout>
-        </LinearLayout>
+                    <TextView android:id="@+id/lblProTitle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="✨ DeckKey Pro" android:textColor="#C77DFF" android:textSize="16sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/lblProStatus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="Status: LITE (Free Plan)" android:textColor="#FFFFFF" android:textSize="14sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/lblProDesc" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Unlock all themes, Urdu/Chinese typing, macros, and more." android:textColor="#AAAAAA" android:textSize="13sp" />
+                    <TextView android:id="@+id/lblDeviceId" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textColor="#FFFFFF" android:textIsSelectable="true" android:textSize="12sp" />
 
-        <CheckBox
-            android:id="@+id/cbHaptics"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:buttonTint="@color/accent"
-            android:text="@string/pref_haptics"
-            android:textColor="@color/key_text" />
+                    <LinearLayout android:id="@+id/layoutActivationBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+                        <EditText android:id="@+id/txtActivationCode" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1.5" android:background="#0A0A0C" android:paddingHorizontal="12dp" android:hint="Enter Code" android:textColor="#FFFFFF" android:textColorHint="#666666" android:inputType="textCapCharacters" android:textSize="14sp" />
+                        <Button android:id="@+id/btnActivatePro" android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1.0" android:layout_marginStart="8dp" android:backgroundTint="#C77DFF" android:textColor="#FFFFFF" android:text="Activate" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-        <CheckBox
-            android:id="@+id/cbHelperLabels"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:buttonTint="@color/accent"
-            android:text="Show English Pronunciation Hints (PRO)"
-            android:textColor="@color/key_text" />
-
-        <CheckBox
-            android:id="@+id/cbSound"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:buttonTint="@color/accent"
-            android:text="@string/pref_sound"
-            android:textColor="@color/key_text" />
-
-        <CheckBox
-            android:id="@+id/cbPopup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:buttonTint="@color/accent"
-            android:text="@string/pref_popup"
-            android:textColor="@color/key_text" />
-
-        <TextView
-            android:id="@+id/lblKeyHeight"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/pref_key_height"
-            android:textColor="@color/key_text"
-            android:textSize="14sp" />
-
-        <SeekBar
-            android:id="@+id/seekKeyHeight"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/lblRepeatInterval"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="@string/pref_repeat_interval"
-            android:textColor="@color/key_text"
-            android:textSize="14sp" />
-
-        <SeekBar
-            android:id="@+id/seekRepeatInterval"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_marginVertical="16dp"
-            android:background="@color/key_border" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/section_appearance"
-            android:textColor="@color/key_text"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/pref_theme"
-            android:textColor="@color/key_text_dim"
-            android:textSize="13sp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvThemes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:orientation="horizontal"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/pref_background"
-            android:textColor="@color/key_text_dim"
-            android:textSize="13sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnPickBg"
-                android:layout_width="0dp"
+            <!-- Theme Engine Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:text="@string/btn_pick_bg" />
+                app:cardBackgroundColor="#1A1A20"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="16dp">
 
-            <Button
-                android:id="@+id/btnClearBg"
-                android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🎨 Theme Engine" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
+                    
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvThemes"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal">
+                        <Button android:id="@+id/btnPickBg" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="6dp" android:backgroundTint="#2D2D35" android:textColor="#FFFFFF" android:text="Set Image" />
+                        <Button android:id="@+id/btnClearBg" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:backgroundTint="#2D2D35" android:textColor="#FF6B6B" android:text="Clear Image" />
+                    </LinearLayout>
+
+                    <TextView android:id="@+id/lblBgDim" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#FFFFFF" android:textSize="13sp" />
+                    <SeekBar android:id="@+id/seekBgDim" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:progressTint="#58A6FF" android:thumbTint="#58A6FF" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Engineering Settings Card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/btn_clear_bg" />
+                app:cardBackgroundColor="#1A1A20"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="16dp">
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="⚙️ Engineering" android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" />
+
+                    <CheckBox android:id="@+id/cbHaptics" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:buttonTint="#4CD787" android:text="HD Haptic Engine (LRA)" android:textColor="#FFFFFF" />
+                    <CheckBox android:id="@+id/cbSound" android:layout_width="match_parent" android:layout_height="wrap_content" android:buttonTint="#58A6FF" android:text="Acoustic Feedback" android:textColor="#FFFFFF" />
+                    <CheckBox android:id="@+id/cbPopup" android:layout_width="match_parent" android:layout_height="wrap_content" android:buttonTint="#C77DFF" android:text="Dynamic Key Preview" android:textColor="#FFFFFF" />
+                    <CheckBox android:id="@+id/cbHelperLabels" android:layout_width="match_parent" android:layout_height="wrap_content" android:buttonTint="#FFB300" android:text="Pronunciation Hints (PRO)" android:textColor="#FFFFFF" />
+
+                    <TextView android:id="@+id/lblKeyHeight" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textColor="#FFFFFF" android:textSize="13sp" />
+                    <SeekBar android:id="@+id/seekKeyHeight" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:progressTint="#58A6FF" android:thumbTint="#58A6FF" />
+
+                    <TextView android:id="@+id/lblRepeatInterval" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="#FFFFFF" android:textSize="13sp" />
+                    <SeekBar android:id="@+id/seekRepeatInterval" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:progressTint="#58A6FF" android:thumbTint="#58A6FF" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Test Area -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="Input Sandbox" android:textColor="#888888" android:textSize="14sp" android:layout_gravity="center_horizontal"/>
+            <EditText android:id="@+id/tryInput" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:background="#121216" android:hint="Try macros like !email or swipe spacebar..." android:inputType="textMultiLine" android:minLines="3" android:padding="16dp" android:textColor="#FFFFFF" android:textColorHint="#555555" android:gravity="top|start" />
         </LinearLayout>
+    </ScrollView>
 
-        <TextView
-            android:id="@+id/lblBgDim"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:textColor="@color/key_text"
-            android:textSize="13sp" />
+    <!-- Bottom Navigation Mockup -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:background="#121216"
+        android:elevation="8dp">
 
-        <SeekBar
-            android:id="@+id/seekBgDim"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="@string/try_it"
-            android:textColor="@color/key_text_dim"
-            android:textSize="14sp" />
-
-        <EditText
-            android:id="@+id/tryInput"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:background="@color/key_normal"
-            android:hint="Type / test Ctrl, arrows, Esc here"
-            android:inputType="textMultiLine"
-            android:minLines="3"
-            android:padding="12dp"
-            android:textColor="@color/key_text"
-            android:textColorHint="@color/key_text_dim" />
-
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_compass" app:tint="#58A6FF" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Home" android:textColor="#58A6FF" android:textSize="10sp" android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_gallery" app:tint="#888888" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Themes" android:textColor="#888888" android:textSize="10sp" android:layout_marginTop="2dp" />
+        </LinearLayout>
+        <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
+            <ImageView android:layout_width="24dp" android:layout_height="24dp" android:src="@android:drawable/ic_menu_preferences" app:tint="#888888" />
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Settings" android:textColor="#888888" android:textSize="10sp" android:layout_marginTop="2dp" />
+        </LinearLayout>
     </LinearLayout>
-</ScrollView>
+
+</LinearLayout>

@@ -45,7 +45,7 @@ class KeyboardView @JvmOverloads constructor(
         fun onModifierUp(modifier: Modifier)
         fun onRepeatStart(key: Key)
         fun onRepeatStop()
-        fun onSpaceDrag(steps: Int)
+        fun onSpaceDrag(stepsX: Int, stepsY: Int)
         fun onSpaceSwipe(direction: Int)
         fun onSpaceLongPress()
         fun onKeyLongPress(key: Key)
@@ -70,12 +70,14 @@ class KeyboardView @JvmOverloads constructor(
 
     private var spacePointerId: Int = -1
     private var spaceDragStartX: Float = 0f
+    private var spaceDragStartY: Float = 0f
     private var isSpaceDragging: Boolean = false
     private val spaceDragThreshold: Float get() = dp(12f)
 
     var showHelperLabels: Boolean = false
 
     private var initialSpaceTouchX: Float = 0f
+    private var initialSpaceTouchY: Float = 0f
     private var longPressKey: PositionedKey? = null
     private var hasFiredLongPress: Boolean = false
     private val longPressRunnable = Runnable { handleLongPress() }
@@ -277,26 +279,72 @@ class KeyboardView @JvmOverloads constructor(
             else -> colNormal
         }
 
-        // Draw shadow first (3D mechanical key depth effect)
-        val shadowHeight = dp(2f)
-        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = adjustColorBrightness(baseColor, 0.65f)
-        }
-        val shadowR = RectF(r.left, r.top + shadowHeight, r.right, r.bottom + shadowHeight)
-        canvas.drawRoundRect(shadowR, cornerRadius, cornerRadius, shadowPaint)
-
-        // Draw key face slightly elevated
         val faceR = RectF(r.left, r.top, r.right, r.bottom)
-        keyFill.color = baseColor
-        val shader = android.graphics.LinearGradient(
-            faceR.left, faceR.top, faceR.left, faceR.bottom,
-            baseColor,
-            adjustColorBrightness(baseColor, 0.82f),
-            android.graphics.Shader.TileMode.CLAMP
-        )
-        keyFill.shader = shader
-        canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
-        keyFill.shader = null
+
+        if (theme.isGlassmorphism) {
+            // Semi-transparent fills with inner specular highlight (1px border)
+            keyFill.color = baseColor
+            keyFill.style = Paint.Style.FILL
+            canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+
+            // Inner specular border
+            keyFill.style = Paint.Style.STROKE
+            keyFill.strokeWidth = dp(1f)
+            keyFill.color = Color.argb(40, 255, 255, 255)
+            canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+            keyFill.style = Paint.Style.FILL // reset
+        } else if (theme.isNeumorphic) {
+            // Extruded clay look: flat surface, soft dual-directional shadows
+            keyFill.color = baseColor
+            val offset = dp(4f)
+            val shadowRadius = dp(8f)
+            keyFill.setShadowLayer(shadowRadius, offset, offset, Color.argb(38, 0, 0, 0))
+            canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+            keyFill.clearShadowLayer()
+
+            // Pseudo-highlight (top-left) - simple stroke approach for performance
+            keyFill.style = Paint.Style.STROKE
+            keyFill.strokeWidth = dp(1.5f)
+            keyFill.color = Color.argb(120, 255, 255, 255)
+            canvas.drawRoundRect(RectF(faceR.left, faceR.top, faceR.right, faceR.bottom), cornerRadius, cornerRadius, keyFill)
+            keyFill.style = Paint.Style.FILL
+        } else if (theme.isCyberpunk) {
+            // Glowing neon borders on dark surface
+            keyFill.color = baseColor
+            canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+
+            keyFill.style = Paint.Style.STROKE
+            keyFill.strokeWidth = dp(1.5f)
+            val glowColor = if (pressed) theme.modifierActive else theme.textDim
+            keyFill.color = glowColor
+            keyFill.setShadowLayer(dp(5f), 0f, 0f, glowColor)
+            canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+            keyFill.clearShadowLayer()
+            keyFill.style = Paint.Style.FILL
+        } else if (theme.isMinimalist) {
+            // Stark high-contrast, perfectly flat
+            keyFill.color = baseColor
+            canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+        } else {
+            // Standard Vintage Mechanical (3D depth)
+            val shadowHeight = dp(2f)
+            val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = adjustColorBrightness(baseColor, 0.65f)
+            }
+            val shadowR = RectF(r.left, r.top + shadowHeight, r.right, r.bottom + shadowHeight)
+            canvas.drawRoundRect(shadowR, cornerRadius, cornerRadius, shadowPaint)
+
+            keyFill.color = baseColor
+            val shader = android.graphics.LinearGradient(
+                faceR.left, faceR.top, faceR.left, faceR.bottom,
+                baseColor,
+                adjustColorBrightness(baseColor, 0.82f),
+                android.graphics.Shader.TileMode.CLAMP
+            )
+            keyFill.shader = shader
+            canvas.drawRoundRect(faceR, cornerRadius, cornerRadius, keyFill)
+            keyFill.shader = null
+        }
 
         // primary label
         val cx = r.centerX()
@@ -400,7 +448,9 @@ class KeyboardView @JvmOverloads constructor(
         if (key.keyCode == 62 || key.label.equals("space", ignoreCase = true) || key.baseOutput == " ") {
             spacePointerId = pointerId
             spaceDragStartX = x
+            spaceDragStartY = y
             initialSpaceTouchX = x
+            initialSpaceTouchY = y
             isSpaceDragging = false
         }
 
@@ -425,26 +475,34 @@ class KeyboardView @JvmOverloads constructor(
 
         if (pointerId == spacePointerId) {
             val dx = x - spaceDragStartX
+            val dy = y - spaceDragStartY
             val threshold = spaceDragThreshold
             val totalDx = x - initialSpaceTouchX
-            if (Math.abs(totalDx) > dp(80f)) {
+            val totalDy = y - initialSpaceTouchY
+            
+            if (Math.abs(totalDx) > dp(80f) && Math.abs(totalDx) > Math.abs(totalDy)) {
                 isSpaceDragging = true
                 handler.removeCallbacks(longPressRunnable)
                 preview.dismiss()
                 return
             }
 
-            if (isSpaceDragging || Math.abs(dx) > threshold) {
+            if (isSpaceDragging || Math.abs(dx) > threshold || Math.abs(dy) > threshold) {
                 if (!isSpaceDragging) {
                     isSpaceDragging = true
                     listener?.onRepeatStop()
                     handler.removeCallbacks(longPressRunnable)
                     preview.dismiss()
                 }
-                val steps = (dx / threshold).toInt()
-                if (steps != 0) {
-                    spaceDragStartX += steps * threshold
-                    listener?.onSpaceDrag(steps)
+                val stepsX = (dx / threshold).toInt()
+                val stepsY = (dy / threshold).toInt()
+                if (stepsX != 0) {
+                    spaceDragStartX += stepsX * threshold
+                    listener?.onSpaceDrag(stepsX, 0)
+                }
+                if (stepsY != 0) {
+                    spaceDragStartY += stepsY * threshold
+                    listener?.onSpaceDrag(0, stepsY)
                 }
                 return
             }
@@ -552,8 +610,41 @@ class KeyboardView @JvmOverloads constructor(
     private fun shouldPreview(key: Key): Boolean =
         key.type == KeyType.CHAR && key.baseOutput.length == 1
 
-    private fun hitTest(x: Float, y: Float): PositionedKey? =
-        positioned.firstOrNull { it.bounds.contains(x, y) }
+    private fun hitTest(x: Float, y: Float): PositionedKey? {
+        // Direct hit test first
+        val directHit = positioned.firstOrNull { it.bounds.contains(x, y) }
+        if (directHit != null) return directHit
+
+        // Predictive Touch Area Scaling (PTAS)
+        var closestKey: PositionedKey? = null
+        var minDistance = Float.MAX_VALUE
+
+        for (pk in positioned) {
+            val b = pk.bounds
+            val cx = b.centerX()
+            val cy = b.centerY()
+            val dist = Math.hypot((x - cx).toDouble(), (y - cy).toDouble()).toFloat()
+
+            // Base pull radius
+            var pullRadius = dp(22f)
+
+            // Mocking the probability engine: Common English characters get a dynamically expanded hit radius
+            if (pk.key.type == KeyType.CHAR) {
+                val char = pk.key.label.lowercase()
+                if (char in listOf("e", "t", "a", "o", "i", "n", "s", "r", "h")) {
+                    pullRadius *= 1.45f // Expand by 45%
+                }
+            } else if (pk.key.type == KeyType.MODIFIER || pk.key.type == KeyType.LAYOUT_SWITCH) {
+                pullRadius *= 1.2f // Expand modifiers slightly
+            }
+
+            if (dist < pullRadius && dist < minDistance) {
+                minDistance = dist
+                closestKey = pk
+            }
+        }
+        return closestKey
+    }
 
     private fun dp(v: Float): Float = v * resources.displayMetrics.density
 

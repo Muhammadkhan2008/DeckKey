@@ -216,8 +216,11 @@ class KeyDispatcher(
             if (key.keyCode != 0) {
                 sendKeyCode(ic, key.keyCode)
             } else if (key.baseOutput.isNotEmpty()) {
-                // FIX: Validate baseOutput is not empty before sending
-                sendChar(ic, key.baseOutput.first())
+                if (key.baseOutput.length == 1) {
+                    sendChar(ic, key.baseOutput.first())
+                } else {
+                    ic.commitText(key.baseOutput, 1)
+                }
             } else {
                 // FIX: Log warning for debug when no output available
                 Log.w("DeckKey", "No output for key '${key.label}' with modifiers (ctrl=$ctrl, alt=$alt, meta=$meta)")
@@ -273,8 +276,9 @@ class KeyDispatcher(
     private fun sendKeyCode(ic: InputConnection, keyCode: Int) {
         val meta = buildMetaState(includeShift = true)
         val now = System.currentTimeMillis()
-        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0, meta))
-        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0, meta))
+        val flags = KeyEvent.FLAG_SOFT_KEYBOARD or KeyEvent.FLAG_KEEP_TOUCH_MODE
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, keyCode, 0, meta, -1, 0, flags))
+        ic.sendKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_UP, keyCode, 0, meta, -1, 0, flags))
     }
 
     /** Map a single char to key events via the virtual KeyCharacterMap (fallback path). */

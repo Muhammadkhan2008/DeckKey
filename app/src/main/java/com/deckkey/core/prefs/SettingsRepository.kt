@@ -31,6 +31,7 @@ class SettingsRepository(private val context: Context) {
         val BACKGROUND_DIM = intPreferencesKey("background_dim")
         val IS_PRO = booleanPreferencesKey("is_pro")
         val SHOW_HELPER_LABELS = booleanPreferencesKey("show_helper_labels")
+        val MACROS_JSON = stringPreferencesKey("macros_json")
     }
 
     private fun read(p: Preferences): Settings = Settings(
@@ -48,6 +49,19 @@ class SettingsRepository(private val context: Context) {
         backgroundDim = p[Keys.BACKGROUND_DIM] ?: Settings.DEFAULT.backgroundDim,
         isPro = p[Keys.IS_PRO] ?: Settings.DEFAULT.isPro,
         showHelperLabels = p[Keys.SHOW_HELPER_LABELS] ?: Settings.DEFAULT.showHelperLabels,
+        macros = runCatching {
+            val jsonStr = p[Keys.MACROS_JSON]
+            if (jsonStr.isNullOrEmpty()) Settings.DEFAULT.macros else {
+                val json = org.json.JSONObject(jsonStr)
+                val map = mutableMapOf<String, String>()
+                val keys = json.keys()
+                while (keys.hasNext()) {
+                    val k = keys.next()
+                    map[k] = json.getString(k)
+                }
+                map
+            }
+        }.getOrDefault(Settings.DEFAULT.macros),
     )
 
     val settings: Flow<Settings> = context.dataStore.data.map { read(it) }
@@ -67,6 +81,7 @@ class SettingsRepository(private val context: Context) {
             p[Keys.BACKGROUND_DIM] = next.backgroundDim
             p[Keys.IS_PRO] = next.isPro
             p[Keys.SHOW_HELPER_LABELS] = next.showHelperLabels
+            p[Keys.MACROS_JSON] = org.json.JSONObject(next.macros).toString()
         }
     }
 }

@@ -41,8 +41,13 @@ class FeedbackController(context: Context) {
     private fun vibrateTick(view: View) {
         val v = vibrator
         if (v != null && v.hasVibrator()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // IMPROVEMENT: Use EFFECT_CLICK for better keyboard feel
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                // HD Haptic System: Linear Resonant Actuators using Composition
+                val effect = VibrationEffect.startComposition()
+                    .addPrimitive(VibrationEffect.Composition.PRIMITIVE_CLICK, 0.85f)
+                    .compose()
+                v.vibrate(effect)
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 v.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 // Stronger vibration for older devices (15ms, amplitude 100)

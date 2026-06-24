@@ -64,6 +64,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     private lateinit var suggestionBar: LinearLayout
     private lateinit var suggestionTextViews: Array<TextView>
     private var currentEmojiCategory = "smile"
+    private var isTranslationVisible = false
 
     override fun onCreate() {
         super.onCreate()
@@ -203,7 +204,20 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
             view.previewEnabled = s.previewPopup
             view.showHelperLabels = s.showHelperLabels
             view.keyHeightPx = s.keyHeightDp * resources.displayMetrics.density
-            view.applyTheme(Themes.byId(s.themeId))
+            val theme = Themes.byId(s.themeId)
+            view.applyTheme(theme)
+            
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                window?.window?.let { win ->
+                    if (theme.isGlassmorphism) {
+                        win.addFlags(android.view.WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+                        win.attributes.blurBehindRadius = 30
+                    } else {
+                        win.clearFlags(android.view.WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+                    }
+                    win.attributes = win.attributes
+                }
+            }
             // Load background image if a URI is set
             if (s.backgroundUri.isNotEmpty()) {
                 loadBackgroundBitmap(s.backgroundUri, s.backgroundDim)
@@ -259,17 +273,9 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         } else if (nextId == "emoji") {
             keyboardView?.setLayout(getEmojiLayout())
         } else {
-            // Respect Pro plan block for Urdu & Chinese
-            if (!settings.isPro && (nextId == "urdu" || nextId == "chinese")) {
-                Toast.makeText(this, "${nextId.uppercase()} keyboard is a PRO feature!", Toast.LENGTH_SHORT).show()
-                currentLayoutId = "qwerty"
-                lastTextLayoutId = "qwerty"
-                keyboardView?.setLayout(layouts.load("qwerty"))
-            } else {
-                keyboardView?.setLayout(layouts.load(nextId))
-            }
+            keyboardView?.setLayout(layouts.load(nextId))
         }
-        updateSuggestions()
+        keyboardContainer.post { updateSuggestions() }
     }
 
     private fun getNextLanguageId(current: String): String {
@@ -324,8 +330,25 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
             switchLayout("emoji")
             return
         }
-        dispatcher.dispatch(key, currentInputConnection)
-        updateSuggestions()
+
+        val ic = currentInputConnection
+        if (ic != null && key.baseOutput.length == 1 && (key.baseOutput == " " || key.baseOutput == "\n")) {
+            val before = ic.getTextBeforeCursor(30, 0)?.toString() ?: ""
+            val lastWordMatch = Regex("([!/][a-zA-Z0-9_]+)$").find(before)
+            if (lastWordMatch != null) {
+                val trigger = lastWordMatch.value
+                val macroValue = settings.macros[trigger]
+                if (macroValue != null) {
+                    ic.deleteSurroundingText(trigger.length, 0)
+                    ic.commitText(macroValue + key.baseOutput, 1)
+                    keyboardContainer.post { updateSuggestions() }
+                    return
+                }
+            }
+        }
+
+        dispatcher.dispatch(key, ic)
+        keyboardContainer.post { updateSuggestions() }
     }
 
     override fun onModifierDown(modifier: Modifier) {
@@ -350,14 +373,23 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
         dispatcher.dispatch(key, currentInputConnection)
     }
 
-    override fun onSpaceDrag(steps: Int) {
+    override fun onSpaceDrag(stepsX: Int, stepsY: Int) {
         val ic = currentInputConnection ?: return
-        val keyCode = if (steps < 0) android.view.KeyEvent.KEYCODE_DPAD_LEFT else android.view.KeyEvent.KEYCODE_DPAD_RIGHT
-        val absSteps = Math.abs(steps)
         val now = System.currentTimeMillis()
-        for (i in 0 until absSteps) {
-            ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCode, 0, 0))
-            ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCode, 0, 0))
+        
+        if (stepsX != 0) {
+            val keyCodeX = if (stepsX < 0) android.view.KeyEvent.KEYCODE_DPAD_LEFT else android.view.KeyEvent.KEYCODE_DPAD_RIGHT
+            for (i in 0 until Math.abs(stepsX)) {
+                ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCodeX, 0, 0))
+                ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCodeX, 0, 0))
+            }
+        }
+        if (stepsY != 0) {
+            val keyCodeY = if (stepsY < 0) android.view.KeyEvent.KEYCODE_DPAD_UP else android.view.KeyEvent.KEYCODE_DPAD_DOWN
+            for (i in 0 until Math.abs(stepsY)) {
+                ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_DOWN, keyCodeY, 0, 0))
+                ic.sendKeyEvent(android.view.KeyEvent(now, now, android.view.KeyEvent.ACTION_UP, keyCodeY, 0, 0))
+            }
         }
     }
 
@@ -474,6 +506,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     private fun updateSuggestions() {
+        if (isTranslationVisible) return
         val ic = currentInputConnection ?: return
         val before = ic.getTextBeforeCursor(20, 0)?.toString() ?: ""
 
@@ -582,14 +615,10 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
             ic.deleteSurroundingText(lastWord.length, 0)
         }
         ic.commitText(suggestionText + " ", 1)
-        updateSuggestions()
+        keyboardContainer.post { updateSuggestions() }
     }
 
     private fun translateSelectedText() {
-        if (!settings.isPro) {
-            Toast.makeText(this, "Translation is a PRO feature!", Toast.LENGTH_SHORT).show()
-            return
-        }
         val ic = currentInputConnection ?: return
         var textToTranslate = ic.getSelectedText(0)?.toString() ?: ""
         if (textToTranslate.isEmpty()) {
@@ -630,6 +659,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     private fun showTranslationBar(original: String, translated: String) {
+        isTranslationVisible = true
         suggestionBar.removeAllViews()
 
         val context = this
@@ -668,6 +698,7 @@ class DeckKeyService : InputMethodService(), KeyboardView.Listener {
     }
 
     private fun restoreSuggestionBar() {
+        isTranslationVisible = false
         suggestionBar.removeAllViews()
         for (tv in suggestionTextViews) {
             suggestionBar.addView(tv)
