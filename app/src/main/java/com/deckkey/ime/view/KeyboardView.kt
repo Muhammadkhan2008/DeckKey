@@ -127,6 +127,9 @@ class KeyboardView @JvmOverloads constructor(
 
     fun setLayout(newLayout: KeyboardLayout) {
         layout = newLayout
+        if (width > 0 && height > 0) {
+            reflow(width.toFloat(), height.toFloat())
+        }
         requestLayout()
         invalidate()
     }
@@ -220,7 +223,7 @@ class KeyboardView @JvmOverloads constructor(
                         if (keyIdx < qwertyRows[rowIdx].size) {
                             helper = qwertyRows[rowIdx][keyIdx]
                         }
-                    } else if (lay.id == "hindi" || lay.id == "chinese") {
+                    } else if (lay.id == "hindi") {
                         helper = key.label
                     }
                 }
@@ -331,16 +334,32 @@ class KeyboardView @JvmOverloads constructor(
 
     private fun labelFor(key: Key, mods: ModifierStateManager?): String {
         if (key.type != KeyType.CHAR) return key.label
+        val label = key.label
+        val isEmoji = label.length >= 2 && Character.isSurrogate(label[0])
+        if (label.length > 1 && !isEmoji) {
+            return label
+        }
+
         val shift = mods?.isShiftActive() == true
         val base = key.baseOutput
-        val isLetter = base.length == 1 && base[0].isLetter()
-        return when {
-            isLetter -> {
-                val upper = (mods?.capsLock == true) xor shift
-                if (upper) base.uppercase() else base.lowercase()
+
+        val layId = layout?.id ?: "qwerty"
+        if (layId == "qwerty" || layId == "symbols" || layId == "symbols2" || layId == "clipboard" || layId == "emoji" || layId == "chinese") {
+            val isLetter = base.length == 1 && base[0].isLetter()
+            return when {
+                isLetter -> {
+                    val upper = (mods?.capsLock == true) xor shift
+                    if (upper) base.uppercase() else base.lowercase()
+                }
+                shift -> key.shiftLabel ?: label
+                else -> label
             }
-            shift -> key.shiftLabel ?: key.label
-            else -> key.label
+        } else {
+            return if (shift) {
+                key.shiftLabel ?: base
+            } else {
+                base
+            }
         }
     }
 
