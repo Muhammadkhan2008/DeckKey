@@ -117,6 +117,9 @@ class KeyDispatcher(
         if (expr.isEmpty() || !expr.any { it in listOf('+', '-', '*', '/') }) return false
 
         val result = evaluateMath(expr) ?: return false
+        // Guard against divide-by-zero / overflow producing Infinity or NaN,
+        // which would otherwise commit a stray "∞" into the text field.
+        if (!result.isFinite()) return false
 
         val formattedResult = if (result % 1.0 == 0.0) {
             result.toLong().toString()

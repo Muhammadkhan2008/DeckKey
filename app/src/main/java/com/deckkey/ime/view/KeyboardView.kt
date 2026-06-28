@@ -54,8 +54,9 @@ class KeyboardView @JvmOverloads constructor(
     var listener: Listener? = null
     var modifiers: ModifierStateManager? = null
 
-    // IMPROVEMENT: Mobile-friendly default key height (46dp for standard PC-like ergonomics)
-    var keyHeightPx: Float = dp(46f)
+    // IMPROVEMENT: Mobile-friendly default key height — 56dp so the visible key
+    // (after the inter-key gap) clears Android's 48dp minimum touch target.
+    var keyHeightPx: Float = dp(56f)
         set(value) { field = value; requestLayout() }
 
     var previewEnabled: Boolean = true
@@ -530,6 +531,9 @@ class KeyboardView @JvmOverloads constructor(
 
         if (hasFiredLongPress) {
             hasFiredLongPress = false
+            // If this was a repeatable key (e.g. Backspace) that started auto-repeat
+            // before the long-press fired, make sure the repeat is stopped on release.
+            if (key.repeatable && key.type != KeyType.MODIFIER) listener?.onRepeatStop()
             if (shouldPreview(key)) preview.dismiss()
             invalidate()
             return
